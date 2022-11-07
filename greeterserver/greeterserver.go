@@ -19,6 +19,6 @@ func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 	return &pb.HelloReply{Message: returnMessage}, nil
 }
 
-func GreeterServerInstance() *server {
+func New() *server {
 	return &server{}
 }

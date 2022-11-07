@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	gs "myapp/greeterserver"
+	greeterserver "myapp/greeterserver"
 	pb "myapp/helloservice"
 
 	"github.com/spf13/cobra"
@@ -27,7 +27,7 @@ func doServerRun(cmd *cobra.Command, args []string) {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
-	server := gs.GreeterServerInstance()
+	server := greeterserver.New()
 
 	pb.RegisterGreeterServer(s, server)
 	log.Printf("server listening at %v", lis.Addr())
