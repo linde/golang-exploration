@@ -13,11 +13,12 @@ service Greeter {
 
 // The request message containing the user's name.
 message HelloRequest {
-  string name = 1;
-  int64 times = 2;
+  string name = 10;
+  int64 times = 20;
+  int64 rest = 30;
 }
 
 // The response message containing the greetings
 message HelloReply {
-  string message = 1;
+  string message = 10;
 }
