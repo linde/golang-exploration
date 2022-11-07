@@ -1,17 +1,11 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"io"
 	"log"
-	"time"
-
+	gc "myapp/greeterclient"
 	pb "myapp/helloservice"
 
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 var clientCmd = &cobra.Command{
@@ -34,40 +28,18 @@ func init() {
 	clientCmd.Flags().IntVarP(&timeoutSecs, "timeout", "x", 60, "timeout (in seconds)")
 }
 
+func handleReply(r *pb.HelloReply, err error) {
+	if err != nil {
+		log.Fatalf("client.SayHello failed: %v", err)
+	}
+	log.Printf("Greeting: %s", r.GetMessage())
+}
+
 func doClientRun(cmd *cobra.Command, args []string) {
 
-	portParam, _ := cmd.Flags().GetInt("port")
-	addr := fmt.Sprintf("%s:%d", host, portParam)
+	port, _ := cmd.Flags().GetInt("port") // TODO should this be with the others?
+	client := gc.New(host, port)
 
-	log.Printf("Greeting %s %d times @ %s after %d seconds rest\n", name, times, addr, rest)
-
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
-	defer conn.Close()
-	c := pb.NewGreeterClient(conn)
-
-	timeout := time.Second * time.Duration(timeoutSecs)
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	request := pb.HelloRequest{Name: name, Times: times, Rest: rest}
-
-	stream, err := c.SayHello(ctx, &request)
-	if err != nil {
-		log.Fatalf("client.ListFeatures failed: %v", err)
-	}
-
-	for {
-		r, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			log.Fatalf("client.SayHello failed: %v", err)
-		}
-		log.Printf("Greeting: %s", r.GetMessage())
-	}
+	client.Call(name, times, rest, timeoutSecs, handleReply)
 
 }
