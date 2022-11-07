@@ -38,8 +38,12 @@ func handleReply(r *pb.HelloReply, err error) {
 func doClientRun(cmd *cobra.Command, args []string) {
 
 	port, _ := cmd.Flags().GetInt("port") // TODO should this be with the others?
-	client := gc.New(host, port)
+	client, err := gc.New(host, port)
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
 
 	client.Call(name, times, rest, timeoutSecs, handleReply)
+	defer client.Close()
 
 }

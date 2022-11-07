@@ -16,11 +16,11 @@ import (
 type greeterclient struct {
 	host string
 	port int
-	c    pb.GreeterClient
+	conn *grpc.ClientConn
 }
 
 // TODO initialize the return in the signature. idiomatic no?
-func New(host string, port int) *greeterclient {
+func New(host string, port int) (*greeterclient, error) {
 
 	gc := greeterclient{host: host, port: port}
 
@@ -30,18 +30,18 @@ func New(host string, port int) *greeterclient {
 
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		return nil, err
 	}
 
-	// TODO understand how to do this since the method ends: defer conn.Close()
-
-	gc.c = pb.NewGreeterClient(conn)
-	return &gc
+	gc.conn = conn
+	return &gc, err
 }
 
 type ReplyHandler func(reply *pb.HelloReply, err error)
 
 func (gc *greeterclient) Call(name string, times, rest int64, timeoutSecs int, rh ReplyHandler) {
+
+	ngc := pb.NewGreeterClient(gc.conn)
 
 	timeout := time.Second * time.Duration(timeoutSecs)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -49,10 +49,10 @@ func (gc *greeterclient) Call(name string, times, rest int64, timeoutSecs int, r
 
 	request := pb.HelloRequest{Name: name, Times: times, Rest: rest}
 
-	stream, err := gc.c.SayHello(ctx, &request)
+	stream, err := ngc.SayHello(ctx, &request)
 
 	if err != nil {
-		log.Fatalf("client.ListFeatures failed: %v", err)
+		log.Fatalf("greeterclient.Call failed: %v", err)
 	}
 
 	for {
@@ -63,4 +63,8 @@ func (gc *greeterclient) Call(name string, times, rest int64, timeoutSecs int, r
 		rh(r, err)
 	}
 
+}
+
+func (gc *greeterclient) Close() {
+	gc.conn.Close()
 }
