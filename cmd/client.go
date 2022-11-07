@@ -42,8 +42,8 @@ func doClientRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
+	defer client.Close()
 
 	client.Call(name, times, rest, timeoutSecs, handleReply)
-	defer client.Close()
 
 }

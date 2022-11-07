@@ -66,5 +66,7 @@ func (gc *greeterclient) Call(name string, times, rest int64, timeoutSecs int, r
 }
 
 func (gc *greeterclient) Close() {
-	gc.conn.Close()
+	if gc.conn != nil {
+		gc.conn.Close()
+	}
 }
