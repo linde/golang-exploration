@@ -31,7 +31,7 @@ func init() {
 	clientCmd.Flags().StringVarP(&name, "name", "n", "world", "whom to greet")
 	clientCmd.Flags().Int64VarP(&times, "times", "t", 1, "times to greet them")
 	clientCmd.Flags().Int64VarP(&rest, "rest", "r", 0, "seconds to sleep before serving")
-	clientCmd.Flags().IntVarP(&timeoutSecs, "timeout", "x", 10, "timeout (in seconds)")
+	clientCmd.Flags().IntVarP(&timeoutSecs, "timeout", "x", 60, "timeout (in seconds)")
 }
 
 func doClientRun(cmd *cobra.Command, args []string) {
