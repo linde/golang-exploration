@@ -12,8 +12,10 @@ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 next, [obtain](https://grpc.io/docs/protoc-installation/) and compile the service protobuf with args to use the go plugin from above:
 
 ```bash
-protoc --go_out=. --go_opt=paths=source_relative   \
-        --go-grpc_out=. --go-grpc_opt=paths=source_relative \  
+protoc --go_out=.                               \
+        --go_opt=paths=source_relative          \
+        --go-grpc_out=.                         \
+        --go-grpc_opt=paths=source_relative     \  
         helloservice/helloservice.proto
 ```
 
