@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"time"
 
@@ -33,10 +34,9 @@ func init() {
 func doClientRun(cmd *cobra.Command, args []string) {
 
 	portParam, _ := cmd.Flags().GetInt("port")
-
 	addr := fmt.Sprintf("%s:%d", host, portParam)
 
-	fmt.Printf("Greeting %s %d times @ %s\n", name, times, addr)
+	log.Printf("Greeting %s %d times @ %s\n", name, times, addr)
 
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -45,13 +45,25 @@ func doClientRun(cmd *cobra.Command, args []string) {
 	defer conn.Close()
 	c := pb.NewGreeterClient(conn)
 
-	// Contact the server and print out its response.
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	r, err := c.SayHello(ctx, &pb.HelloRequest{Name: name, Times: times})
+
+	request := pb.HelloRequest{Name: name, Times: times}
+
+	stream, err := c.SayHello(ctx, &request)
 	if err != nil {
-		log.Fatalf("could not greet: %v", err)
+		log.Fatalf("client.ListFeatures failed: %v", err)
 	}
-	log.Printf("Greeting: %s", r.GetMessage())
+
+	for {
+		r, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("client.SayHello failed: %v", err)
+		}
+		log.Printf("Greeting: %s", r.GetMessage())
+	}
 
 }
