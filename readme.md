@@ -9,7 +9,7 @@ go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 ```
 
-next, [obtain](https://grpc.io/docs/protoc-installation/) and compile the service protobuf with args to use the go plugin from above:
+next, obtain the [protobuf comiler, protoc](https://grpc.io/docs/protoc-installation/), and compile the service protobuf with args to use the go plugin from above:
 
 ```bash
 protoc --go_out=.                               \
