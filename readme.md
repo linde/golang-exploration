@@ -1,7 +1,6 @@
 
 this is a set of explorations of golang, grpc, protobuf, unit/e2e testing in golang, etc. stuff i prob should already know, but dont yet.
 
-## TODO, figure out
 to get going, you need to first install some things:
 
 ```bash
