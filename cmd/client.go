@@ -21,7 +21,8 @@ var clientCmd = &cobra.Command{
 }
 
 var name, host string
-var times int64
+var times, rest int64
+var timeoutSecs int
 
 func init() {
 	RootCmd.AddCommand(clientCmd)
@@ -29,6 +30,8 @@ func init() {
 	clientCmd.Flags().StringVarP(&host, "host", "s", "localhost", "server host")
 	clientCmd.Flags().StringVarP(&name, "name", "n", "world", "whom to greet")
 	clientCmd.Flags().Int64VarP(&times, "times", "t", 1, "times to greet them")
+	clientCmd.Flags().Int64VarP(&rest, "rest", "r", 0, "seconds to sleep before serving")
+	clientCmd.Flags().IntVarP(&timeoutSecs, "timeout", "x", 10, "timeout (in seconds)")
 }
 
 func doClientRun(cmd *cobra.Command, args []string) {
@@ -36,7 +39,7 @@ func doClientRun(cmd *cobra.Command, args []string) {
 	portParam, _ := cmd.Flags().GetInt("port")
 	addr := fmt.Sprintf("%s:%d", host, portParam)
 
-	log.Printf("Greeting %s %d times @ %s\n", name, times, addr)
+	log.Printf("Greeting %s %d times @ %s after %d seconds rest\n", name, times, addr, rest)
 
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -45,10 +48,11 @@ func doClientRun(cmd *cobra.Command, args []string) {
 	defer conn.Close()
 	c := pb.NewGreeterClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	timeout := time.Second * time.Duration(timeoutSecs)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	request := pb.HelloRequest{Name: name, Times: times}
+	request := pb.HelloRequest{Name: name, Times: times, Rest: rest}
 
 	stream, err := c.SayHello(ctx, &request)
 	if err != nil {

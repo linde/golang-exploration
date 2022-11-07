@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	pb "myapp/helloservice"
+	"time"
 )
 
 type server struct {
@@ -11,7 +12,10 @@ type server struct {
 }
 
 func (s *server) SayHello(in *pb.HelloRequest, stream pb.Greeter_SayHelloServer) error {
-	log.Printf("Received: %v, %d times", in.GetName(), in.GetTimes())
+	log.Printf("Received: %v, %d times, after %d seconds rest", in.GetName(), in.GetTimes(), in.GetRest())
+
+	// TODO maybe this is cool to make a param?
+	time.Sleep(time.Duration(in.GetRest()) * time.Second)
 
 	// TODO: fix this logic so it skips first reply if less than 1 time, ie --times=0
 	for i := int64(0); i < in.GetTimes(); i++ {
