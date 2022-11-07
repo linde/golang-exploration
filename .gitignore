@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -16,4 +17,6 @@
 
 
 ## protocol buffer stuff
+=======
+>>>>>>> server-streaming
 *.pb.go
