@@ -18,6 +18,10 @@ var serverCmd = &cobra.Command{
 	Run:   doServerRun,
 }
 
+func init() {
+	RootCmd.AddCommand(serverCmd)
+}
+
 func doServerRun(cmd *cobra.Command, args []string) {
 
 	portParam, _ := cmd.Flags().GetInt("port")
@@ -34,10 +38,5 @@ func doServerRun(cmd *cobra.Command, args []string) {
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
-
-}
-
-func init() {
-	RootCmd.AddCommand(serverCmd)
 
 }
