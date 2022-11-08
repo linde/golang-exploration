@@ -1,15 +1,11 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
-	"net"
 
 	greeterserver "myapp/greeterserver"
-	pb "myapp/helloservice"
 
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 )
 
 var serverCmd = &cobra.Command{
@@ -24,19 +20,10 @@ func init() {
 
 func doServerRun(cmd *cobra.Command, args []string) {
 
-	portParam, _ := cmd.Flags().GetInt("port")
+	port, _ := cmd.Flags().GetInt("port")
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", portParam))
+	err := greeterserver.ServePort(port)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.Fatalf("serverCmd failed to serve: %v", err)
 	}
-	s := grpc.NewServer()
-	server := greeterserver.New()
-
-	pb.RegisterGreeterServer(s, server)
-	log.Printf("server listening at %v", lis.Addr())
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
-
 }
