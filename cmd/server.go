@@ -10,7 +10,7 @@ import (
 
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "minimal grpc client for greeter service",
+	Short: "example server for the greeter service",
 	Run:   doServerRun,
 }
 
@@ -22,8 +22,7 @@ func doServerRun(cmd *cobra.Command, args []string) {
 
 	port, _ := cmd.Flags().GetInt("port")
 
-	err := greeterserver.ServePort(port)
-	if err != nil {
+	if err := greeterserver.ServePort(port); err != nil {
 		log.Fatalf("serverCmd failed to serve: %v", err)
 	}
 }
