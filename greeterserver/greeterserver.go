@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-type server struct {
+type Server struct {
 	pb.UnimplementedGreeterServer
 }
 
@@ -27,7 +27,7 @@ func ServePort(port int) error {
 func ServeListener(lis net.Listener) error {
 
 	s := grpc.NewServer()
-	pb.RegisterGreeterServer(s, &server{})
+	pb.RegisterGreeterServer(s, &Server{})
 
 	log.Printf("server listening at %v", lis.Addr())
 	if err := s.Serve(lis); err != nil {
@@ -37,7 +37,7 @@ func ServeListener(lis net.Listener) error {
 	return nil
 }
 
-func (s *server) SayHello(in *pb.HelloRequest, stream pb.Greeter_SayHelloServer) error {
+func (s *Server) SayHello(in *pb.HelloRequest, stream pb.Greeter_SayHelloServer) error {
 	log.Printf("Received: %v, %d times, after %d seconds rest", in.GetName(), in.GetTimes(), in.GetRest())
 
 	time.Sleep(time.Duration(in.GetRest()) * time.Second)
