@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	pb "myapp/helloservice"
+	pb "myapp/greeter"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

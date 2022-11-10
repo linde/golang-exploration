@@ -5,8 +5,8 @@ import (
 	"io"
 	"net"
 
-	gs "myapp/greeterserver"
-	pb "myapp/helloservice"
+	pb "myapp/greeter"
+	"myapp/greeterserver"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -17,10 +17,10 @@ func Greeter(ctx context.Context) (pb.GreeterClient, func()) {
 	buffer := 1024 * 1024
 	listener := bufconn.Listen(buffer)
 
-	s := grpc.NewServer()
-	pb.RegisterGreeterServer(s, &gs.Server{})
 	go func() {
-		if err := s.Serve(listener); err != nil {
+		stopFunc, err := greeterserver.ServeListener(listener)
+		defer stopFunc()
+		if err != nil {
 			panic(err)
 		}
 	}()
@@ -33,7 +33,7 @@ func Greeter(ctx context.Context) (pb.GreeterClient, func()) {
 
 	client := pb.NewGreeterClient(conn)
 
-	return client, s.Stop
+	return client, func() {} // TODO lots to do
 }
 
 func ReplyStreamToBuffer(replyStream pb.Greeter_SayHelloClient) ([]*pb.HelloReply, error) {

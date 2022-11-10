@@ -1,7 +1,7 @@
 
 syntax = "proto3";
 
-option go_package = "./helloservice";
+option go_package = "./greeter";
 
 package helloservice;
 

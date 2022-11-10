@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"log"
+	pb "myapp/greeter"
 	gc "myapp/greeterclient"
-	pb "myapp/helloservice"
 
 	"github.com/spf13/cobra"
 )
@@ -32,7 +32,7 @@ func handleReply(r *pb.HelloReply, err error) {
 	if err != nil {
 		log.Fatalf("client.SayHello failed: %v", err)
 	}
-	log.Printf("Greeting: %s", r.GetMessage())
+	log.Printf("clientCmd: %s", r.GetMessage())
 }
 
 func doClientRun(cmd *cobra.Command, args []string) {

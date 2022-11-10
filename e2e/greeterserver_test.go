@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	pb "myapp/helloservice"
+	pb "myapp/greeter"
 )
 
 func TestGreeterGrpc(t *testing.T) {
