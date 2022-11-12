@@ -1,4 +1,4 @@
-package greeteclient
+package greeterclient
 
 import (
 	"context"
