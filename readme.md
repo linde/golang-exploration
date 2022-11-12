@@ -52,6 +52,10 @@ find helloservice -name *.pb.go  | xargs rm
 Collected Tasks
 
 * TODO: clean up output and logger use
+* TODO: think about moving proto to a `proto/` dir
+
+
+
 
 
 
