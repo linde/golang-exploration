@@ -10,11 +10,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var clientCmd = &cobra.Command{
-	Use:   "client",
-	Short: "minimal grpc client for greeter service",
-	Run:   doClientRun,
+func NewClientCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "client",
+		Short: "minimal grpc client for greeter service",
+		Run:   doClientRun,
+	}
+
 }
+
+var clientCmd = NewClientCmd()
 
 var name, host string
 var times, rest int64

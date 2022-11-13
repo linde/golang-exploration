@@ -8,11 +8,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var serverCmd = &cobra.Command{
-	Use:   "server",
-	Short: "example server for the greeter service",
-	Run:   doServerRun,
+func NewServerCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "server",
+		Short: "example server for the greeter service",
+		Run:   doServerRun,
+	}
 }
+
+var serverCmd = NewServerCmd()
 
 func init() {
 	RootCmd.AddCommand(serverCmd)
