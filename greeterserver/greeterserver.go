@@ -40,7 +40,6 @@ func ServeListenerAsync(lis net.Listener) func() {
 
 	go func(chan (struct{})) {
 		<-flag
-		log.Printf("ServeListenerAsync(): got signal to cancel")
 		s.Stop()
 		close(flag)
 	}(flag)

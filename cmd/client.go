@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"context"
 	"log"
 	pb "myapp/greeter"
 	gc "myapp/greeterclient"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -28,22 +30,41 @@ func init() {
 	clientCmd.Flags().IntVarP(&timeoutSecs, "timeout", "x", 60, "timeout (in seconds)")
 }
 
+func doClientRun(cmd *cobra.Command, args []string) {
+
+	port, _ := cmd.Flags().GetInt("port") // TODO should this be with the others?
+
+	timeout := time.Second * time.Duration(timeoutSecs)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	client, err := gc.NewNetClientConn(ctx, host, port)
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+	defer client.Close()
+
+	request := &pb.HelloRequest{Name: name, Times: times, Rest: rest}
+	replyStream, err := client.Call(request)
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+
+	replies, err := gc.ReplyStreamToBuffer(replyStream)
+	if err != nil {
+		log.Fatalf("could not unbuffer the stream: %v", err)
+	}
+	for i, reply := range replies {
+		log.Printf("got %d: %s", i, reply)
+	}
+
+}
+
+/***
 func handleReply(r *pb.HelloReply, err error) {
 	if err != nil {
 		log.Fatalf("client.SayHello failed: %v", err)
 	}
 	log.Printf("clientCmd: %s", r.GetMessage())
 }
-
-func doClientRun(cmd *cobra.Command, args []string) {
-
-	port, _ := cmd.Flags().GetInt("port") // TODO should this be with the others?
-	client, err := gc.New(host, port)
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
-	defer client.Close()
-
-	client.Call(name, times, rest, timeoutSecs, handleReply)
-
-}
+****/
