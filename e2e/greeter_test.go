@@ -46,7 +46,7 @@ func TestAsyncServerStream(t *testing.T) {
 	assert.Nil(helloErr)
 	assert.NotNil(replyStream)
 
-	replies, err := ReplyStreamToBuffer(replyStream)
+	replies, err := greeterclient.ReplyStreamToBuffer(replyStream)
 	assert.Nil(err)
 	assert.Len(replies, int(timesInput))
 	assert.Contains(replies[0].GetMessage(), nameInput)
@@ -59,7 +59,7 @@ func TestAsyncServerStream(t *testing.T) {
 	assert.Nil(err)
 	assert.NotNil(replyStream)
 
-	replies, err = ReplyStreamToBuffer(replyStream)
+	replies, err = greeterclient.ReplyStreamToBuffer(replyStream)
 	assert.Nil(err)
 	assert.Len(replies, int(timesInput))
 
@@ -78,7 +78,7 @@ func TestAsyncServerStream(t *testing.T) {
 	elapsed := time.Since(beforeCallTime)
 	assert.Less(elapsed, time.Duration(restInput)*time.Second)
 
-	replies, err = ReplyStreamToBuffer(replyStream)
+	replies, err = greeterclient.ReplyStreamToBuffer(replyStream)
 	assert.Nil(err)
 	assert.Len(replies, int(timesInput))
 }

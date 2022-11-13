@@ -28,22 +28,24 @@ func ServeListener(lis net.Listener) error {
 	return nil
 }
 
-// TODO should we return the cancel, err?
-func ServeListenerAsync(lis net.Listener) func() {
+func ServeListenerAsync(lis net.Listener) (cancel func()) {
 
 	// TODO prob should use a context for this, no?
 
 	flag := make(chan (struct{}))
-	cancel := func() { flag <- struct{}{} }
+	cancel = func() { flag <- struct{}{} }
 
 	s := NewHelloServer()
 
+	// this is our channel close listener, it takes a ref to the server and
+	// our flag and Stop()'s it when it get a message on the flag channel
 	go func(chan (struct{})) {
 		<-flag
 		s.Stop()
 		close(flag)
 	}(flag)
 
+	// this is the routine to serve requests
 	go func(cancel func()) {
 		defer cancel()
 		log.Printf("ServeListenerAsync() listening at %v", lis.Addr())
@@ -52,6 +54,5 @@ func ServeListenerAsync(lis net.Listener) func() {
 		}
 	}(cancel)
 
-	// TODO should be able to get error as an return from the go rountine
 	return cancel
 }
