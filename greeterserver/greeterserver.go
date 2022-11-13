@@ -6,14 +6,26 @@ import (
 	"net"
 )
 
-func ServePort(port int) error {
+// we return the lis out to get the port in cases where it
+// was passed in as 0, ie as in tests
+func ServePort(port int) (net.Listener, error) {
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Printf("greeterserver.ServePort() failed to listen: %v", err)
-		return err
+		return lis, err
 	}
-	return ServeListener(lis)
+	return lis, ServeListener(lis)
+}
+
+func ServePortAsync(port int) (net.Listener, func(), error) {
+
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		log.Printf("greeterserver.ServePort() failed to listen: %v", err)
+		return lis, func() {}, err
+	}
+	return lis, ServeListenerAsync(lis), err
 }
 
 func ServeListener(lis net.Listener) error {
@@ -40,6 +52,7 @@ func ServeListenerAsync(lis net.Listener) (cancel func()) {
 	// this is our channel close listener, it takes a ref to the server and
 	// our flag and Stop()'s it when it get a message on the flag channel
 	go func(chan (struct{})) {
+		log.Printf("ServeListenerAsync cancel is closing")
 		<-flag
 		s.Stop()
 		close(flag)

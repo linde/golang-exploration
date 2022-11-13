@@ -22,7 +22,7 @@ func doServerRun(cmd *cobra.Command, args []string) {
 
 	port, _ := cmd.Flags().GetInt("port")
 
-	err := greeterserver.ServePort(port)
+	_, err := greeterserver.ServePort(port)
 	if err != nil {
 		log.Fatalf("serverCmd failed to serve: %v", err)
 	}
