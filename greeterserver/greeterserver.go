@@ -6,6 +6,8 @@ import (
 	"net"
 )
 
+// TODO feels like we should be able to combine the async and normal modes of this
+
 // we return the lis out to get the port in cases where it
 // was passed in as 0, ie as in tests
 func ServePort(port int) (net.Listener, error) {
