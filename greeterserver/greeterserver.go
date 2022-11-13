@@ -46,17 +46,23 @@ func ServeListenerAsync(lis net.Listener) (cancel func()) {
 
 	flag := make(chan (struct{}))
 	cancel = func() { flag <- struct{}{} }
+	closed := bool(false)
 
 	s := NewHelloServer()
 
 	// this is our channel close listener, it takes a ref to the server and
 	// our flag and Stop()'s it when it get a message on the flag channel
-	go func(chan (struct{})) {
+	go func(chan (struct{}), *bool) {
 		log.Printf("ServeListenerAsync cancel is closing")
 		<-flag
 		s.Stop()
-		close(flag)
-	}(flag)
+		if !closed {
+			close(flag)
+			closed = true // do we have to syncronize this critical path?
+		} else {
+			log.Printf("called a second time!")
+		}
+	}(flag, &closed)
 
 	// this is the routine to serve requests
 	go func(cancel func()) {

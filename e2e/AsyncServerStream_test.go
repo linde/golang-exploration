@@ -25,7 +25,7 @@ func TestAsyncServerStream(t *testing.T) {
 	// run a buffered Server
 	cancelFunc := greeterserver.ServeListenerAsync(listener)
 	assert.NotNil(cancelFunc)
-	// defer cancelFunc()
+	// TODO why can't i do this: defer cancelFunc()
 
 	bufclientConn, bccErr := greeterclient.NewBufferedClientConn(ctx, listener)
 	assert.NotNil(bufclientConn)

@@ -23,7 +23,7 @@ func TestNetServerStream(t *testing.T) {
 
 	lis, cancel, err := greeterserver.ServePortAsync(port)
 	assert.NotNil(cancel)
-	// defer cancel()
+	defer cancel()
 	assert.Nil(err)
 
 	hostAssignedPort := lis.Addr().(*net.TCPAddr).Port
