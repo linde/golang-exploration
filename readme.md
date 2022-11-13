@@ -51,7 +51,7 @@ find helloservice -name *.pb.go  | xargs rm
 
 Collected Tasks
 
-* TODO: clean up output and logger use
+* TODO: clean up output and logger use and use [logging constants](https://pkg.go.dev/log#pkg-constants)
 * TODO: think about moving proto to a `proto/` dir
 
 
