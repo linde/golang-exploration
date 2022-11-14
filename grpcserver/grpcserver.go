@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net"
+
+	"google.golang.org/grpc"
 )
 
 type grpcserver struct {
@@ -35,4 +37,18 @@ func (gs grpcserver) GetServicePort() (int, error) {
 		msg := fmt.Sprintf("grpcserver server Listner address expected net.TCPAddr, was %T", t)
 		return -1, errors.New(msg) // TODO throw error instead
 	}
+}
+
+func (gs grpcserver) Serve(s *grpc.Server) error {
+
+	log.Printf("server listening at %v", gs.lis.Addr())
+	if err := s.Serve(gs.lis); err != nil {
+		log.Printf("greeterserver.ServeListener() failed to listen: %v", err)
+		return err
+	}
+
+	// TODO figure out why the linter doesnt like this
+	// gs.stopFunc = s.Stop
+
+	return nil
 }

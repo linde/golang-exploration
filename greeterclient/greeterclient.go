@@ -15,12 +15,12 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type clientconn struct {
+type Clientconn struct {
 	conn *grpc.ClientConn
 	ctx  context.Context
 }
 
-func NewBufferedClientConn(ctx context.Context, listener *bufconn.Listener) (netcc *clientconn, returnErr error) {
+func NewBufferedClientConn(ctx context.Context, listener *bufconn.Listener) (netcc *Clientconn, returnErr error) {
 
 	cd := func(context.Context, string) (net.Conn, error) { return listener.Dial() }
 	conn, _ := grpc.DialContext(ctx, "",
@@ -28,11 +28,11 @@ func NewBufferedClientConn(ctx context.Context, listener *bufconn.Listener) (net
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock())
 
-	netcc = &clientconn{conn: conn, ctx: ctx}
+	netcc = &Clientconn{conn: conn, ctx: ctx}
 	return netcc, nil
 }
 
-func NewNetClientConn(ctx context.Context, host string, port int) (netcc *clientconn, returnErr error) {
+func NewNetClientConn(ctx context.Context, host string, port int) (netcc *Clientconn, returnErr error) {
 
 	addr := fmt.Sprintf("%s:%d", host, port)
 
@@ -44,11 +44,11 @@ func NewNetClientConn(ctx context.Context, host string, port int) (netcc *client
 		return nil, err
 	}
 
-	netcc = &clientconn{conn: conn, ctx: ctx}
+	netcc = &Clientconn{conn: conn, ctx: ctx}
 	return netcc, nil
 }
 
-func (gc *clientconn) Call(req *greeter.HelloRequest) (greeter.Greeter_SayHelloClient, error) {
+func (gc *Clientconn) Call(req *greeter.HelloRequest) (greeter.Greeter_SayHelloClient, error) {
 
 	ngc := greeter.NewGreeterClient(gc.conn)
 	stream, err := ngc.SayHello(gc.ctx, req)
@@ -77,7 +77,7 @@ func ReplyStreamToBuffer(replyStream greeter.Greeter_SayHelloClient) ([]*greeter
 	return replies, nil
 }
 
-func (gc *clientconn) Close() {
+func (gc *Clientconn) Close() {
 	if gc.conn != nil {
 		gc.conn.Close()
 	}

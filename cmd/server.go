@@ -4,6 +4,7 @@ import (
 	"log"
 
 	greeterserver "myapp/greeterserver"
+	grpcserver "myapp/grpcserver"
 
 	"github.com/spf13/cobra"
 )
@@ -26,8 +27,14 @@ func doServerRun(cmd *cobra.Command, args []string) {
 
 	port, _ := cmd.Flags().GetInt("port")
 
-	_, err := greeterserver.ServePort(port)
+	gs, err := grpcserver.NewServerFromPort(port)
 	if err != nil {
-		log.Fatalf("serverCmd failed to serve: %v", err)
+		log.Fatalf("serverCmd.doServerRun failed to create server: %v", err)
+	}
+	helloServer := greeterserver.NewHelloServer()
+	defer helloServer.Stop()
+	serveErr := gs.Serve(helloServer)
+	if serveErr != nil {
+		log.Fatalf("serverCmd.doServerRun failed to serve: %v", err)
 	}
 }

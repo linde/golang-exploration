@@ -1,10 +1,15 @@
 package grpcserver
 
 import (
+	"context"
+	"myapp/greeterclient"
+	"myapp/greeterserver"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/test/bufconn"
+
+	pb "myapp/greeter"
 )
 
 func TestNetGrpcServer(t *testing.T) {
@@ -16,14 +21,8 @@ func TestNetGrpcServer(t *testing.T) {
 		err error
 		gs  *grpcserver
 	)
-	intendedPort := 10 * 1000 //this is prob going to be flakey
-	gs, err = NewServerFromPort(intendedPort)
-	assert.NotNil(gs)
-	assert.Nil(err)
-	serverPort, err := gs.GetServicePort()
-	assert.Nil(err)
-	assert.NotNil(serverPort)
-	assert.Equal(intendedPort, serverPort)
+
+	// TODO how to test specifying a port without picking a port in use?
 
 	openPort := 0 // random open port
 	gs, err = NewServerFromPort(openPort)
@@ -58,5 +57,44 @@ func TestBufferGrpcServer(t *testing.T) {
 	assert.Contains(err.Error(), "expected net.TCPAddr")
 	assert.NotNil(invalidPort)
 	assert.Less(invalidPort, 0)
+
+}
+
+func TestBufferServing(t *testing.T) {
+
+	ctx := context.Background()
+	assert := assert.New(t)
+
+	buffer := 1024 * 1024
+	listener := bufconn.Listen(buffer)
+
+	// first spin up the server
+	gs := NewServerListner(listener)
+	assert.NotNil(gs)
+
+	helloServer := greeterserver.NewHelloServer()
+	defer helloServer.Stop()
+
+	go gs.Serve(helloServer)
+
+	// now let's use the buffer with the client
+	bufclientConn, bccErr := greeterclient.NewBufferedClientConn(ctx, listener)
+	assert.NotNil(bufclientConn)
+	assert.Nil(bccErr)
+
+	var (
+		nameInput  string
+		timesInput int
+
+		req pb.HelloRequest
+	)
+
+	// check that the name comes back
+	nameInput = "dolly"
+	timesInput = 1
+	req = pb.HelloRequest{Name: nameInput, Times: int64(timesInput)}
+	replyStream, helloErr := bufclientConn.Call(&req)
+	assert.Nil(helloErr)
+	assert.NotNil(replyStream)
 
 }
