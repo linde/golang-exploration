@@ -2,9 +2,8 @@ package cmd
 
 import (
 	"log"
-
-	greeterserver "myapp/greeterserver"
-	grpcserver "myapp/grpcserver"
+	"myapp/greeterserver"
+	"myapp/grpcservice"
 
 	"github.com/spf13/cobra"
 )
@@ -27,7 +26,7 @@ func doServerRun(cmd *cobra.Command, args []string) {
 
 	port, _ := cmd.Flags().GetInt("port")
 
-	gs, err := grpcserver.NewServerFromPort(port)
+	gs, err := grpcservice.NewServerFromPort(port)
 	if err != nil {
 		log.Fatalf("serverCmd.doServerRun failed to create server: %v", err)
 	}

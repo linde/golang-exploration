@@ -3,8 +3,8 @@ package cmd
 import (
 	"context"
 	"log"
-	pb "myapp/greeter"
-	gc "myapp/greeterclient"
+	"myapp/greeter"
+	"myapp/grpcservice"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -43,19 +43,19 @@ func doClientRun(cmd *cobra.Command, args []string) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	client, err := gc.NewNetClientConn(ctx, host, port)
+	client, err := grpcservice.NewNetClientConn(ctx, host, port)
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
 	defer client.Close()
 
-	request := &pb.HelloRequest{Name: name, Times: times, Rest: rest}
+	request := &greeter.HelloRequest{Name: name, Times: times, Rest: rest}
 	replyStream, err := client.Call(request)
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
 
-	replies, err := gc.ReplyStreamToBuffer(replyStream)
+	replies, err := grpcservice.ReplyStreamToBuffer(replyStream)
 	if err != nil {
 		log.Fatalf("could not unbuffer the stream: %v", err)
 	}

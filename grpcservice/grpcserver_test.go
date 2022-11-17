@@ -1,15 +1,14 @@
-package grpcserver
+package grpcservice
 
 import (
 	"context"
-	"myapp/greeterclient"
-	"myapp/greeterserver"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/test/bufconn"
 
-	pb "myapp/greeter"
+	"myapp/greeter"
+	"myapp/greeterserver"
 )
 
 func TestNetGrpcServer(t *testing.T) {
@@ -78,7 +77,7 @@ func TestBufferServing(t *testing.T) {
 	go gs.Serve(helloServer)
 
 	// now let's use the buffer with the client
-	bufclientConn, bccErr := greeterclient.NewBufferedClientConn(ctx, listener)
+	bufclientConn, bccErr := NewBufferedClientConn(ctx, listener)
 	assert.NotNil(bufclientConn)
 	assert.Nil(bccErr)
 
@@ -86,13 +85,13 @@ func TestBufferServing(t *testing.T) {
 		nameInput  string
 		timesInput int
 
-		req pb.HelloRequest
+		req greeter.HelloRequest
 	)
 
 	// check that the name comes back
 	nameInput = "dolly"
 	timesInput = 1
-	req = pb.HelloRequest{Name: nameInput, Times: int64(timesInput)}
+	req = greeter.HelloRequest{Name: nameInput, Times: int64(timesInput)}
 	replyStream, helloErr := bufclientConn.Call(&req)
 	assert.Nil(helloErr)
 	assert.NotNil(replyStream)

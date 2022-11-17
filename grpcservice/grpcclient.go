@@ -1,4 +1,4 @@
-package greeterclient
+package grpcservice
 
 import (
 	"context"

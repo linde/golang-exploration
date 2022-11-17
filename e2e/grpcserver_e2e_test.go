@@ -2,16 +2,14 @@ package e2e
 
 import (
 	"context"
-	"myapp/greeterclient"
-	greeterserver "myapp/greeterserver"
-	grpcserver "myapp/grpcserver"
+	"myapp/greeter"
+	"myapp/greeterserver"
+	"myapp/grpcservice"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/test/bufconn"
-
-	pb "myapp/greeter"
 )
 
 func TestBufferServing(t *testing.T) {
@@ -22,7 +20,7 @@ func TestBufferServing(t *testing.T) {
 	listener := bufconn.Listen(buffer)
 
 	// first spin up the server
-	gs := grpcserver.NewServerListner(listener)
+	gs := grpcservice.NewServerListner(listener)
 	assert.NotNil(gs)
 
 	helloServer := greeterserver.NewHelloServer()
@@ -32,7 +30,7 @@ func TestBufferServing(t *testing.T) {
 
 	// now let's use the buffer with the client
 
-	cc, bccErr := greeterclient.NewBufferedClientConn(context.Background(), listener)
+	cc, bccErr := grpcservice.NewBufferedClientConn(context.Background(), listener)
 	assert.NotNil(cc)
 	assert.Nil(bccErr)
 	verifyClientCalls(t, cc)
@@ -44,7 +42,7 @@ func TestPortServing(t *testing.T) {
 
 	// first spin up the server
 
-	gs, err := grpcserver.NewServerFromPort(0)
+	gs, err := grpcservice.NewServerFromPort(0)
 	assert.NotNil(gs)
 	assert.Nil(err)
 	serverAssignedPort, portErr := gs.GetServicePort()
@@ -59,14 +57,14 @@ func TestPortServing(t *testing.T) {
 
 	ctx := context.Background()
 
-	cc, bccErr := greeterclient.NewNetClientConn(ctx, "", serverAssignedPort)
+	cc, bccErr := grpcservice.NewNetClientConn(ctx, "", serverAssignedPort)
 	assert.NotNil(cc)
 	assert.Nil(bccErr)
 
 	verifyClientCalls(t, cc)
 }
 
-func verifyClientCalls(t *testing.T, gccc *greeterclient.Clientconn) {
+func verifyClientCalls(t *testing.T, gccc *grpcservice.Clientconn) {
 
 	assert := assert.New(t)
 
@@ -75,18 +73,18 @@ func verifyClientCalls(t *testing.T, gccc *greeterclient.Clientconn) {
 		timesInput int
 		restInput  int
 
-		req pb.HelloRequest
+		req greeter.HelloRequest
 	)
 
 	// check that the name comes back
 	nameInput = "dolly"
 	timesInput = 1
-	req = pb.HelloRequest{Name: nameInput, Times: int64(timesInput)}
+	req = greeter.HelloRequest{Name: nameInput, Times: int64(timesInput)}
 	replyStream, helloErr := gccc.Call(&req)
 	assert.Nil(helloErr)
 	assert.NotNil(replyStream)
 
-	replies, err := greeterclient.ReplyStreamToBuffer(replyStream)
+	replies, err := grpcservice.ReplyStreamToBuffer(replyStream)
 	assert.Nil(err)
 	assert.Len(replies, int(timesInput))
 	assert.Contains(replies[0].GetMessage(), nameInput)
@@ -94,12 +92,12 @@ func verifyClientCalls(t *testing.T, gccc *greeterclient.Clientconn) {
 	// check the times parameter
 	nameInput = "dolly"
 	timesInput = 2
-	req = pb.HelloRequest{Name: nameInput, Times: int64(timesInput)}
+	req = greeter.HelloRequest{Name: nameInput, Times: int64(timesInput)}
 	replyStream, err = gccc.Call(&req)
 	assert.Nil(err)
 	assert.NotNil(replyStream)
 
-	replies, err = greeterclient.ReplyStreamToBuffer(replyStream)
+	replies, err = grpcservice.ReplyStreamToBuffer(replyStream)
 	assert.Nil(err)
 	assert.Len(replies, int(timesInput))
 
@@ -110,7 +108,7 @@ func verifyClientCalls(t *testing.T, gccc *greeterclient.Clientconn) {
 
 	beforeCallTime := time.Now()
 
-	req = pb.HelloRequest{Name: nameInput, Times: int64(timesInput), Rest: int64(restInput)}
+	req = greeter.HelloRequest{Name: nameInput, Times: int64(timesInput), Rest: int64(restInput)}
 	replyStream, err = gccc.Call(&req)
 	assert.Nil(err)
 	assert.NotNil(replyStream)
@@ -118,7 +116,7 @@ func verifyClientCalls(t *testing.T, gccc *greeterclient.Clientconn) {
 	elapsed := time.Since(beforeCallTime)
 	assert.Less(elapsed, time.Duration(restInput)*time.Second)
 
-	replies, err = greeterclient.ReplyStreamToBuffer(replyStream)
+	replies, err = grpcservice.ReplyStreamToBuffer(replyStream)
 	assert.Nil(err)
 	assert.Len(replies, int(timesInput))
 
