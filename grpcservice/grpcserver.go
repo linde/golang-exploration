@@ -46,9 +46,5 @@ func (gs grpcserver) Serve(s *grpc.Server) error {
 		log.Printf("greeterserver.ServeListener() failed to listen: %v", err)
 		return err
 	}
-
-	// TODO figure out why the linter doesnt like this
-	// gs.stopFunc = s.Stop
-
 	return nil
 }
