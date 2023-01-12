@@ -15,8 +15,5 @@
 # vendor/
 
 
-## protocol buffer stuff
-*.pb.go
-
 ## vscode workspace files
 *.code-workspace

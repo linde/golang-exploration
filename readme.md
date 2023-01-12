@@ -1,24 +1,21 @@
 
 this is a set of explorations of golang, grpc, protobuf, unit/e2e testing in golang, etc. stuff i prob should already know, but dont yet.
 
-to get going, you need to first install some things:
+to build, you need to first install some things:
 
 ```bash
 go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 ```
 
-next, obtain the [protobuf comiler, protoc](https://grpc.io/docs/protoc-installation/), and compile the service protobuf with args to use the go plugin from above:
+next, obtain the [protobuf comiler, protoc](https://grpc.io/docs/protoc-installation/), and use `go generate` to compile the service protobuf and then run tests.
 
 ```bash
-protoc --go_out=.                               \
-        --go_opt=paths=source_relative          \
-        --go-grpc_out=.                         \
-        --go-grpc_opt=paths=source_relative     \  
-        helloservice/helloservice.proto
+$ go generate ./... 
+$ go test -v ./... 
 ```
 
-then run a server in the background or another terminal:
+Then run a server in the background or another terminal, optionally in the background with `&`:
 
 ```bash
 go run main.go server
@@ -36,7 +33,7 @@ go run main.go client --name=dolly
 # get empahtic and do it a few times
 go run main.go client --name=dolly --times=3
 
-# get impatient and specify a timeout to stop the exuberance
+# get impatient and specify a timeout to stop any exuberance
 go run main.go client --name=dolly --times=100000000 --timeout=1
 ```
 
@@ -46,7 +43,7 @@ clean-up
 # forground and ctrl-c your server
 
 # remove the protoc generated go files
-find helloservice -name *.pb.go  | xargs rm
+find greeter -name *.pb.go  | xargs rm
 ```
 
 Collected Tasks
