@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"myapp/greeter"
 	"myapp/greeterserver"
 	"myapp/grpcservice"
@@ -64,60 +65,49 @@ func TestPortServing(t *testing.T) {
 	verifyClientCalls(t, cc)
 }
 
-func verifyClientCalls(t *testing.T, gccc *grpcservice.Clientconn) {
+func verifyClientCalls(t *testing.T, grpccc *grpcservice.Clientconn) {
 
-	assert := assert.New(t)
+	tests := []struct {
+		nameInput   string
+		timesInput  int64
+		restInput   int64
+		errExpected bool
+	}{
+		{"dolly", 1, 0, false},
+		{"dolly", 2, 0, false},
+		{"dolly", 2, 3, false},
+	}
 
-	var (
-		nameInput  string
-		timesInput int
-		restInput  int
+	for _, tt := range tests {
 
-		req greeter.HelloRequest
-	)
+		testName := fmt.Sprintf("%s x%d (errExpected=%v)", tt.nameInput, tt.timesInput, tt.errExpected)
+		t.Run(testName, func(ttt *testing.T) {
+			assertNested := assert.New(ttt)
 
-	// check that the name comes back
-	nameInput = "dolly"
-	timesInput = 1
-	req = greeter.HelloRequest{Name: nameInput, Times: int64(timesInput)}
-	replyStream, helloErr := gccc.Call(&req)
-	assert.Nil(helloErr)
-	assert.NotNil(replyStream)
+			req := greeter.HelloRequest{Name: tt.nameInput, Times: tt.timesInput, Rest: tt.restInput}
 
-	replies, err := grpcservice.ReplyStreamToBuffer(replyStream)
-	assert.Nil(err)
-	assert.Len(replies, int(timesInput))
-	assert.Contains(replies[0].GetMessage(), nameInput)
+			beforeCallTime := time.Now()
 
-	// check the times parameter
-	nameInput = "dolly"
-	timesInput = 2
-	req = greeter.HelloRequest{Name: nameInput, Times: int64(timesInput)}
-	replyStream, err = gccc.Call(&req)
-	assert.Nil(err)
-	assert.NotNil(replyStream)
+			replyStream, err := grpccc.Call(&req)
+			if tt.errExpected {
+				assertNested.NotNil(err)
+				return
+			}
 
-	replies, err = grpcservice.ReplyStreamToBuffer(replyStream)
-	assert.Nil(err)
-	assert.Len(replies, int(timesInput))
+			elapsed := time.Since(beforeCallTime)
+			if tt.restInput > 0 {
+				assertNested.Less(elapsed, time.Duration(tt.restInput)*time.Second)
+			}
 
-	// check the rest parameter
-	nameInput = "dolly"
-	timesInput = 1
-	restInput = 2
-
-	beforeCallTime := time.Now()
-
-	req = greeter.HelloRequest{Name: nameInput, Times: int64(timesInput), Rest: int64(restInput)}
-	replyStream, err = gccc.Call(&req)
-	assert.Nil(err)
-	assert.NotNil(replyStream)
-
-	elapsed := time.Since(beforeCallTime)
-	assert.Less(elapsed, time.Duration(restInput)*time.Second)
-
-	replies, err = grpcservice.ReplyStreamToBuffer(replyStream)
-	assert.Nil(err)
-	assert.Len(replies, int(timesInput))
+			assertNested.Nil(err)
+			assertNested.NotNil(replyStream)
+			replies, err := grpcservice.ReplyStreamToBuffer(replyStream)
+			assertNested.Nil(err)
+			assertNested.Len(replies, int(tt.timesInput))
+			if len(replies) > 0 {
+				assertNested.Contains(replies[0].GetMessage(), tt.nameInput)
+			}
+		})
+	}
 
 }
