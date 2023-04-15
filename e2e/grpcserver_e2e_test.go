@@ -80,7 +80,9 @@ func verifyClientCalls(t *testing.T, grpccc *grpcservice.Clientconn) {
 
 	for _, test := range tests {
 
-		testName := fmt.Sprintf("%s x%d (errExpected=%v)", test.nameInput, test.timesInput, test.errExpected)
+		testName := fmt.Sprintf("%s x%d resting %d sec (errExpected=%v)",
+			test.nameInput, test.timesInput, test.restInput, test.errExpected)
+
 		t.Run(testName, func(ttt *testing.T) {
 			assertNested := assert.New(ttt)
 
