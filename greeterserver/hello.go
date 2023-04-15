@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type server struct {
@@ -22,14 +24,24 @@ func NewHelloServer() *grpc.Server {
 }
 
 func (s *server) SayHello(in *pb.HelloRequest, stream pb.Greeter_SayHelloServer) error {
-	log.Printf("SayHello: %v, %d times, after %d seconds rest", in.GetName(), in.GetTimes(), in.GetRest())
 
-	time.Sleep(time.Duration(in.GetRest()) * time.Second)
+	name, times, rest := in.GetName(), in.GetTimes(), in.GetRest()
+	log.Printf("SayHello: %v, %d times, after %d seconds rest", name, times, rest)
 
-	if in.GetTimes() > 0 {
-		for i := int64(0); i < in.GetTimes(); i++ {
+	if rest < 0 {
+		st := status.Newf(codes.InvalidArgument, "got negative rest duration (%v)", rest)
+		return st.Err()
+	}
+	if times < 0 {
+		st := status.Newf(codes.InvalidArgument, "got negative times (%v)", times)
+		return st.Err()
+	}
+	time.Sleep(time.Duration(rest) * time.Second)
 
-			returnMessage := fmt.Sprintf("Hello, %s! (%d of %d)", in.GetName(), i+1, in.GetTimes())
+	if times > 0 {
+		for i := int64(0); i < times; i++ {
+
+			returnMessage := fmt.Sprintf("Hello, %s! (%d of %d)", name, i+1, times)
 			if err := stream.Send(&pb.HelloReply{Message: returnMessage}); err != nil {
 				return err
 			}

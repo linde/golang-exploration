@@ -9,6 +9,7 @@ import (
 
 	"myapp/greeter"
 
+	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 
 	"google.golang.org/grpc"
@@ -53,7 +54,9 @@ func (gc *Clientconn) Call(req *greeter.HelloRequest) (greeter.Greeter_SayHelloC
 	ngc := greeter.NewGreeterClient(gc.conn)
 	stream, err := ngc.SayHello(gc.ctx, req)
 	if err != nil {
-		log.Fatalf("greeterclient.Call failed: %v", err)
+		st := status.Convert(err)
+		log.Printf("greeterclient.Call had error, status: %v", st)
+		stream = nil
 	}
 
 	return stream, err

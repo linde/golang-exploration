@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 )
 
@@ -68,46 +70,53 @@ func TestPortServing(t *testing.T) {
 func verifyClientCalls(t *testing.T, grpccc *grpcservice.Clientconn) {
 
 	tests := []struct {
-		nameInput   string
-		timesInput  int64
-		restInput   int64
-		errExpected bool
+		nameInput    string
+		timesInput   int64
+		restInput    int64
+		codeExpected codes.Code
 	}{
-		{"dolly", 1, 0, false},
-		{"dolly", 2, 0, false},
-		{"dolly", 2, 3, false},
+		{"expectingInvalidArgumentError", 1, -1, codes.InvalidArgument},
+		{"expectingInvalidArgumentError", -1, 0, codes.InvalidArgument},
+		{"dolly", 1, 0, codes.OK},
+		{"dolly", 2, 0, codes.OK},
+		{"dolly", 2, 3, codes.OK},
 	}
 
-	for _, test := range tests {
+	for idx, test := range tests {
 
-		testName := fmt.Sprintf("%s x%d resting %d sec (errExpected=%v)",
-			test.nameInput, test.timesInput, test.restInput, test.errExpected)
+		testName := fmt.Sprintf("verifyClientCalls(idx:%d){name:%s,times:%v,rest:%v,expectedCode:%s}",
+			idx, test.nameInput, test.timesInput, test.restInput, test.codeExpected.String())
+		t.Run(testName, func(tt *testing.T) {
 
-		t.Run(testName, func(ttt *testing.T) {
-			assertNested := assert.New(ttt)
+			nestedAssert := assert.New(tt)
 
 			req := greeter.HelloRequest{Name: test.nameInput, Times: test.timesInput, Rest: test.restInput}
 
 			beforeCallTime := time.Now()
 
 			replyStream, err := grpccc.Call(&req)
-			if test.errExpected {
-				assertNested.NotNil(err)
-				return
-			}
+			nestedAssert.Nil(err, "unexpected err in grpc Call()")
 
 			elapsed := time.Since(beforeCallTime)
 			if test.restInput > 0 {
-				assertNested.Less(elapsed, time.Duration(test.restInput)*time.Second)
+				nestedAssert.Less(elapsed, time.Duration(test.restInput)*time.Second)
 			}
 
-			assertNested.Nil(err)
-			assertNested.NotNil(replyStream)
+			nestedAssert.Nil(err)
+			nestedAssert.NotNil(replyStream)
 			replies, err := grpcservice.ReplyStreamToBuffer(replyStream)
-			assertNested.Nil(err)
-			assertNested.Len(replies, int(test.timesInput))
+
+			if test.codeExpected != codes.OK {
+				nestedAssert.NotNil(err)
+				st := status.Convert(err)
+				nestedAssert.Equal(test.codeExpected, st.Code())
+				return
+			}
+
+			nestedAssert.Nil(err)
+			nestedAssert.Len(replies, int(test.timesInput))
 			if len(replies) > 0 {
-				assertNested.Contains(replies[0].GetMessage(), test.nameInput)
+				nestedAssert.Contains(replies[0].GetMessage(), test.nameInput)
 			}
 		})
 	}
