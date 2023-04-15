@@ -78,34 +78,34 @@ func verifyClientCalls(t *testing.T, grpccc *grpcservice.Clientconn) {
 		{"dolly", 2, 3, false},
 	}
 
-	for _, tt := range tests {
+	for _, test := range tests {
 
-		testName := fmt.Sprintf("%s x%d (errExpected=%v)", tt.nameInput, tt.timesInput, tt.errExpected)
+		testName := fmt.Sprintf("%s x%d (errExpected=%v)", test.nameInput, test.timesInput, test.errExpected)
 		t.Run(testName, func(ttt *testing.T) {
 			assertNested := assert.New(ttt)
 
-			req := greeter.HelloRequest{Name: tt.nameInput, Times: tt.timesInput, Rest: tt.restInput}
+			req := greeter.HelloRequest{Name: test.nameInput, Times: test.timesInput, Rest: test.restInput}
 
 			beforeCallTime := time.Now()
 
 			replyStream, err := grpccc.Call(&req)
-			if tt.errExpected {
+			if test.errExpected {
 				assertNested.NotNil(err)
 				return
 			}
 
 			elapsed := time.Since(beforeCallTime)
-			if tt.restInput > 0 {
-				assertNested.Less(elapsed, time.Duration(tt.restInput)*time.Second)
+			if test.restInput > 0 {
+				assertNested.Less(elapsed, time.Duration(test.restInput)*time.Second)
 			}
 
 			assertNested.Nil(err)
 			assertNested.NotNil(replyStream)
 			replies, err := grpcservice.ReplyStreamToBuffer(replyStream)
 			assertNested.Nil(err)
-			assertNested.Len(replies, int(tt.timesInput))
+			assertNested.Len(replies, int(test.timesInput))
 			if len(replies) > 0 {
-				assertNested.Contains(replies[0].GetMessage(), tt.nameInput)
+				assertNested.Contains(replies[0].GetMessage(), test.nameInput)
 			}
 		})
 	}
