@@ -3,9 +3,11 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"myapp/greeter"
 	"myapp/greeterserver"
 	"myapp/grpcservice"
+	"strings"
 	"testing"
 	"time"
 
@@ -37,6 +39,44 @@ func TestBufferServing(t *testing.T) {
 	assert.NotNil(cc)
 	assert.Nil(bccErr)
 	verifyClientCalls(t, cc)
+}
+
+func TestPortAssignment(t *testing.T) {
+
+	assert := assert.New(t)
+
+	const (
+		PORT_MIN, PORT_MAX        int    = 49152, 65535
+		ATTEMPTS_TO_GET_FREE_PORT int    = 10
+		ADDR_IN_USE_ERROR_MSG     string = "address already in use"
+	)
+
+	getRandomFromRange := func(min, max int) int {
+		return rand.Intn(max-min) + min
+	}
+
+	for attempt := 0; attempt < ATTEMPTS_TO_GET_FREE_PORT; attempt++ {
+
+		// get a port from a range that is reserved for dynamic use. try
+		// ATTEMPTS_TO_GET_FREE_PORT times to make sure it's not in use
+
+		assignedPort := getRandomFromRange(PORT_MIN, PORT_MAX)
+		gs, err := grpcservice.NewServerFromPort(assignedPort)
+		if err != nil && strings.Contains(err.Error(), ADDR_IN_USE_ERROR_MSG) {
+			continue
+		}
+		assert.NotNil(gs)
+		assert.Nil(err)
+
+		serverAssignedPort, portErr := gs.GetServicePort()
+		assert.Nil(portErr)
+		assert.Equal(assignedPort, serverAssignedPort)
+		return
+	}
+
+	failMsg := fmt.Sprintf("tried %d times, but cannot get free port in range [%d,%d]",
+		ATTEMPTS_TO_GET_FREE_PORT, PORT_MIN, PORT_MAX)
+	assert.Fail(failMsg)
 }
 
 func TestPortServing(t *testing.T) {
