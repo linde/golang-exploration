@@ -35,7 +35,7 @@ func (gs grpcserver) GetServicePort() (int, error) {
 		return addr.(*net.TCPAddr).Port, nil
 	default:
 		msg := fmt.Sprintf("grpcserver server Listner address expected net.TCPAddr, was %T", t)
-		return -1, errors.New(msg) // TODO throw error instead
+		return -1, errors.New(msg)
 	}
 }
 
