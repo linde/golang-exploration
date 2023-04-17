@@ -21,8 +21,6 @@ func TestNetGrpcServer(t *testing.T) {
 		gs  *grpcserver
 	)
 
-	// TODO how to test specifying a port without picking a port in use?
-
 	openPort := 0 // random open port
 	gs, err = NewServerFromPort(openPort)
 	assert.NotNil(gs)
@@ -31,7 +29,6 @@ func TestNetGrpcServer(t *testing.T) {
 	assert.Nil(err)
 	assert.Positive(serverAssignedPort)
 	assert.NotEqual(openPort, serverAssignedPort)
-
 }
 
 func TestBufferGrpcServer(t *testing.T) {
