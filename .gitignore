@@ -17,3 +17,6 @@
 
 ## vscode workspace files
 *.code-workspace
+
+# the default binary for our package
+^myapp$

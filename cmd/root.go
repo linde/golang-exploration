@@ -3,14 +3,14 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
 
 func NewRootCmd() *cobra.Command {
 	return &cobra.Command{
-		// TODO: get the name of the CLI command used from cobra
-		Use:   "rpc-cmd-style",
+		Use:   filepath.Base(os.Args[0]),
 		Short: "implements a CLI for either a client or server for the greeter service",
 	}
 }
