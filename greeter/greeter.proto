@@ -5,16 +5,24 @@ option go_package = "./greeter";
 
 package helloservice;
 
+import "google/api/annotations.proto";
+
+
 // The greeting service definition.
 service Greeter {
   // Sends a greeting
-  rpc SayHello (HelloRequest) returns (stream HelloReply) {}
+  rpc SayHello (HelloRequest) returns (stream HelloReply) {
+    option (google.api.http) = {
+      get: "/v1/helloservice/sayhello"
+    };
+  }
 }
 
 // The request message containing the user's name.
 message HelloRequest {
   string name = 10;
   int64 times = 20;
+  // TODO rename this to be pause or sleep so we can use "rest" for the REST gateway
   int64 rest = 30;
 }
 

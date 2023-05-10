@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"myapp/greeter"
 	"myapp/grpcservice"
@@ -43,7 +44,8 @@ func doClientRun(cmd *cobra.Command, args []string) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	client, err := grpcservice.NewNetClientConn(ctx, host, port)
+	target := fmt.Sprintf("%s:%d", host, port)
+	client, err := grpcservice.NewNetClientConn(ctx, target)
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}

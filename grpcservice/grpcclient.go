@@ -2,7 +2,6 @@ package grpcservice
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log"
 	"net"
@@ -21,6 +20,10 @@ type Clientconn struct {
 	ctx  context.Context
 }
 
+func (cc Clientconn) GetClientConn() *grpc.ClientConn {
+	return cc.conn
+}
+
 func NewBufferedClientConn(ctx context.Context, listener *bufconn.Listener) (netcc *Clientconn, returnErr error) {
 
 	cd := func(context.Context, string) (net.Conn, error) { return listener.Dial() }
@@ -33,13 +36,11 @@ func NewBufferedClientConn(ctx context.Context, listener *bufconn.Listener) (net
 	return netcc, nil
 }
 
-func NewNetClientConn(ctx context.Context, host string, port int) (netcc *Clientconn, returnErr error) {
+func NewNetClientConn(ctx context.Context, target string) (netcc *Clientconn, returnErr error) {
 
-	addr := fmt.Sprintf("%s:%d", host, port)
+	log.Printf("NewNetClientConn() client to: %s", target)
 
-	log.Printf("NewNetClientConn() client to: %s", addr)
-
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(target, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("NewNetClientConn() error: %v", err)
 		return nil, err

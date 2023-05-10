@@ -20,3 +20,6 @@
 
 # the default binary for our package
 ^myapp$
+
+# remove proto annotation directories
+greeter/google/*

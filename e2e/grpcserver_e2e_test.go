@@ -100,7 +100,8 @@ func TestPortServing(t *testing.T) {
 
 	ctx := context.Background()
 
-	cc, bccErr := grpcservice.NewNetClientConn(ctx, "", serverAssignedPort)
+	target := fmt.Sprintf(":%d", serverAssignedPort)
+	cc, bccErr := grpcservice.NewNetClientConn(ctx, target)
 	assert.NotNil(cc)
 	assert.Nil(bccErr)
 

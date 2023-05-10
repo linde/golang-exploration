@@ -27,15 +27,27 @@ func NewServerListner(lis net.Listener) *grpcserver {
 	return &grpcserver{lis: lis}
 }
 
+// TODO migrate all clients to use GetServiceTCPAddr
 func (gs grpcserver) GetServicePort() (int, error) {
+
+	addr, err := gs.GetServiceTCPAddr()
+
+	if err != nil {
+		return -1, err
+	}
+
+	return addr.Port, nil
+}
+
+func (gs grpcserver) GetServiceTCPAddr() (*net.TCPAddr, error) {
 
 	addr := gs.lis.Addr()
 	switch t := addr.(type) {
 	case (*net.TCPAddr):
-		return addr.(*net.TCPAddr).Port, nil
+		return addr.(*net.TCPAddr), nil
 	default:
 		msg := fmt.Sprintf("grpcserver server Listner address expected net.TCPAddr, was %T", t)
-		return -1, errors.New(msg)
+		return nil, errors.New(msg)
 	}
 }
 
