@@ -29,7 +29,8 @@ type HelloRequest struct {
 
 	Name  string `protobuf:"bytes,10,opt,name=name,proto3" json:"name,omitempty"`
 	Times int64  `protobuf:"varint,20,opt,name=times,proto3" json:"times,omitempty"`
-	Rest  int64  `protobuf:"varint,30,opt,name=rest,proto3" json:"rest,omitempty"`
+	// TODO rename this to be pause or sleep so we can use "rest" for the REST gateway
+	Rest int64 `protobuf:"varint,30,opt,name=rest,proto3" json:"rest,omitempty"`
 }
 
 func (x *HelloRequest) Reset() {
