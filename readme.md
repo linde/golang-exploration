@@ -51,7 +51,7 @@ Collected Tasks
 
 * TODO: clean up output and logger use and use [logging constants](https://pkg.go.dev/log#pkg-constants)
 * TODO: think about moving proto to a `proto/` dir
-
+* TODO: generate the openapi v2 schema for the rest gw via this [example](https://github.com/grpc-ecosystem/grpc-gateway/blob/main/examples/internal/proto/examplepb/a_bit_of_everything.proto#L219)
 
 
 
