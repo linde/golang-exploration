@@ -12,7 +12,7 @@ func Test_ServerCommand(t *testing.T) {
 	cmd := NewServerCmd()
 	assert.NotNil(cmd)
 
-	cmd.SetArgs([]string{"--restPort=8888"})
+	cmd.SetArgs([]string{"--rest=8888"})
 	//GenericCommandRunner(t, cmd /*** no assertions bc this wont return ***/)
 
 }

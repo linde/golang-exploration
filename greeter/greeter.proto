@@ -22,8 +22,7 @@ service Greeter {
 message HelloRequest {
   string name = 10;
   int64 times = 20;
-  // TODO rename this to be pause or sleep so we can use "rest" for the REST gateway
-  int64 rest = 30;
+  int64 pause = 30;
 }
 
 // The response message containing the greetings

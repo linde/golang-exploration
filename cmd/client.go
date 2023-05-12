@@ -23,7 +23,7 @@ func NewClientCmd() *cobra.Command {
 var clientCmd = NewClientCmd()
 
 var name, host string
-var times, rest int64
+var times, pause int64
 var timeoutSecs int
 
 func init() {
@@ -32,7 +32,7 @@ func init() {
 	clientCmd.Flags().StringVarP(&host, "host", "s", "localhost", "server host")
 	clientCmd.Flags().StringVarP(&name, "name", "n", "world", "whom to greet")
 	clientCmd.Flags().Int64VarP(&times, "times", "t", 1, "times to greet them")
-	clientCmd.Flags().Int64VarP(&rest, "rest", "r", 0, "seconds to sleep before serving")
+	clientCmd.Flags().Int64VarP(&pause, "pause", "p", 0, "seconds to pause before serving")
 	clientCmd.Flags().IntVarP(&timeoutSecs, "timeout", "x", 60, "timeout (in seconds)")
 }
 
@@ -51,7 +51,7 @@ func doClientRun(cmd *cobra.Command, args []string) {
 	}
 	defer client.Close()
 
-	request := &greeter.HelloRequest{Name: name, Times: times, Rest: rest}
+	request := &greeter.HelloRequest{Name: name, Times: times, Pause: pause}
 	replyStream, err := client.Call(request)
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
@@ -66,12 +66,3 @@ func doClientRun(cmd *cobra.Command, args []string) {
 	}
 
 }
-
-/***
-func handleReply(r *pb.HelloReply, err error) {
-	if err != nil {
-		log.Fatalf("client.SayHello failed: %v", err)
-	}
-	log.Printf("clientCmd: %s", r.GetMessage())
-}
-****/

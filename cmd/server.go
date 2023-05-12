@@ -17,7 +17,7 @@ func NewServerCmd() *cobra.Command {
 	}
 
 	// TODO document and unit and e2e test the rest port
-	cmd.Flags().IntVarP(&restPort, "restPort", "R", -1, "port to use to also enable the rest gateway")
+	cmd.Flags().IntVarP(&restPort, "rest", "r", -1, "port to use to also enable the rest gateway")
 	return cmd
 
 }

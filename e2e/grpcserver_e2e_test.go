@@ -113,7 +113,7 @@ func verifyClientCalls(t *testing.T, grpccc *grpcservice.Clientconn) {
 	tests := []struct {
 		nameInput    string
 		timesInput   int64
-		restInput    int64
+		pauseInput   int64
 		codeExpected codes.Code
 	}{
 		{"expectingInvalidArgumentError", 1, -1, codes.InvalidArgument},
@@ -126,12 +126,12 @@ func verifyClientCalls(t *testing.T, grpccc *grpcservice.Clientconn) {
 	for idx, test := range tests {
 
 		testName := fmt.Sprintf("verifyClientCalls(idx:%d){name:%s,times:%v,rest:%v,expectedCode:%s}",
-			idx, test.nameInput, test.timesInput, test.restInput, test.codeExpected.String())
+			idx, test.nameInput, test.timesInput, test.pauseInput, test.codeExpected.String())
 		t.Run(testName, func(tt *testing.T) {
 
 			nestedAssert := assert.New(tt)
 
-			req := greeter.HelloRequest{Name: test.nameInput, Times: test.timesInput, Rest: test.restInput}
+			req := greeter.HelloRequest{Name: test.nameInput, Times: test.timesInput, Pause: test.pauseInput}
 
 			beforeCallTime := time.Now()
 
@@ -139,8 +139,8 @@ func verifyClientCalls(t *testing.T, grpccc *grpcservice.Clientconn) {
 			nestedAssert.Nil(err, "unexpected err in grpc Call()")
 
 			elapsed := time.Since(beforeCallTime)
-			if test.restInput > 0 {
-				nestedAssert.Less(elapsed, time.Duration(test.restInput)*time.Second)
+			if test.pauseInput > 0 {
+				nestedAssert.Less(elapsed, time.Duration(test.pauseInput)*time.Second)
 			}
 
 			nestedAssert.Nil(err)
