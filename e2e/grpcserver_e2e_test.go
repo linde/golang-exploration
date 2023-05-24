@@ -163,3 +163,27 @@ func verifyClientCalls(t *testing.T, grpccc *grpcservice.Clientconn) {
 	}
 
 }
+
+func BenchmarkBufferServing(b *testing.B) {
+
+	gs, _ := grpcservice.NewServerFromPort(0)
+	serverAssignedPort, _ := gs.GetServicePort()
+	helloServer := greeterserver.NewHelloServer()
+	defer helloServer.Stop()
+	go gs.Serve(helloServer)
+
+	ctx := context.Background()
+
+	target := fmt.Sprintf(":%d", serverAssignedPort)
+	cc, _ := grpcservice.NewNetClientConn(ctx, target)
+
+	for i := 0; i < 1000; i++ {
+		testName := fmt.Sprintf("name_%d", i)
+		req := greeter.HelloRequest{Name: testName, Times: int64(i), Pause: 0}
+		replyStream, _ := cc.Call(&req)
+
+		replies, _ := grpcservice.ReplyStreamToBuffer(replyStream)
+		b.Logf("BenchmarkBufferServing got %d replies", len(replies))
+	}
+
+}
