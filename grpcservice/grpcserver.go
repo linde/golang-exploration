@@ -27,7 +27,6 @@ func NewServerListner(lis net.Listener) *grpcserver {
 	return &grpcserver{lis: lis}
 }
 
-// TODO migrate all clients to use GetServiceTCPAddr
 func (gs grpcserver) GetServicePort() (int, error) {
 
 	addr, err := gs.GetServiceTCPAddr()
