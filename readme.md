@@ -1,4 +1,6 @@
 
+# Overview 
+
 this is a set of explorations of golang, grpc, protobuf, unit/e2e testing in golang, etc. stuff i prob should already know, but dont yet.
 
 to build, you need to first install some things:
@@ -9,14 +11,18 @@ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
 ```
 
-next, obtain the [protobuf comiler, protoc](https://grpc.io/docs/protoc-installation/), and use `go generate` to compile the service protobuf and then run tests.
+next, obtain the protobuf comiler, [protoc](https://grpc.io/docs/protoc-installation/), and use `go generate` to compile the service protobuf and then run tests.
 
 ```bash
 $ go generate ./... 
 $ go test -v ./... 
 ```
 
-Then run a server in the background or another terminal, optionally in the background with `&`:
+# Tring it out
+
+## GRPC 
+
+Then run a server in another terminal or in the background via `&`:
 
 ```bash
 go run main.go server
@@ -36,12 +42,30 @@ go run main.go client --name=dolly --times=3
 
 # get impatient and specify a timeout to stop any exuberance
 go run main.go client --name=dolly --times=100000000 --timeout=1
+
+# forground and ctrl-c your server
+
 ```
 
-clean-up
+## REST Gateway 
+
+You can also run a REST gateway to handle REST client calls and proxy them to the gateway.  To do this, run the server with the `--rest [port #]` parameter and use curl or another http client:
 
 ```bash
-# forground and ctrl-c your server
+
+export REST_GW_PORT=8888
+go run main.go server --rest=${REST_GW_PORT}  &
+
+curl "http://localhost:${REST_GW_PORT}/v1/helloservice/sayhello?name=dolly&times=1"
+
+
+
+```
+
+
+## clean-up
+
+```bash
 
 # remove the protoc generated go files
 find greeter -name *.pb.go  | xargs rm
