@@ -69,7 +69,6 @@ func TestRestGateway(t *testing.T) {
 			assert.Nil(httpErr)
 			assert.NotNil(resp)
 			assert.Equal(test.respCode, resp.StatusCode)
-
 			defer resp.Body.Close()
 
 			if test.respCode == http.StatusOK {
@@ -80,9 +79,6 @@ func TestRestGateway(t *testing.T) {
 				assert.Contains(bodyStr, test.nameInput)
 				assert.Contains(bodyStr, fmt.Sprintf("%d of %d", test.timesInput, test.timesInput))
 			}
-
 		})
-
 	}
-
 }
