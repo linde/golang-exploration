@@ -4,7 +4,7 @@ import (
 	"log"
 	"myapp/greeterserver"
 	"myapp/grpcservice"
-	"myapp/restservice"
+	"myapp/restserver"
 
 	"github.com/spf13/cobra"
 )
@@ -46,7 +46,7 @@ func doServerRun(cmd *cobra.Command, args []string) {
 		if err != nil {
 			log.Fatalf("error getting RPC service address: %s", err)
 		}
-		go restservice.NewRestGateway(restPort, rpcAddr)
+		go restserver.NewRestGateway(restPort, rpcAddr)
 	}
 
 	serveErr := gs.Serve(helloServer)
