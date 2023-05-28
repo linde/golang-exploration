@@ -33,14 +33,14 @@ func TestRestGateway(t *testing.T) {
 	//  we use a channel to receive it's address
 	gsTCPAddr, addressErr := gs.GetServiceTCPAddr()
 	assert.Nil(addressErr)
-	gwAddrChan := make(chan string)
-	go NewRestGateway(0, gsTCPAddr, gwAddrChan)
+	rgw := NewRestGateway(0, gsTCPAddr)
+	assert.NotNil(rgw)
+	defer rgw.Close()
 
-	// TODO do this is via a select it's not blocking, if there were an error
-	gwAddr := <-gwAddrChan
-	assert.NotZero(len(gwAddr))
+	gwAddr := rgw.GetRestGatewayAddr()
+	go rgw.Serve()
 
-	// TODO data drive a few tests/assertions
+	// ok, we're set up to test the restgawy
 
 	tests := []struct {
 		nameInput  string
@@ -71,7 +71,7 @@ func TestRestGateway(t *testing.T) {
 			assert.Equal(test.respCode, resp.StatusCode)
 			defer resp.Body.Close()
 
-			if test.respCode == http.StatusOK {
+			if resp.StatusCode == http.StatusOK {
 				body, err := io.ReadAll(resp.Body)
 				assert.Nil(err)
 

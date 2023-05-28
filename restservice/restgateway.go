@@ -12,17 +12,22 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 )
 
+type restgatewayserver struct {
+	listener   net.Listener
+	gwmux      *runtime.ServeMux
+	grpcClient *grpcservice.Clientconn
+}
+
 // This is a rest gateway serving on restGatewayPort that proxies
 // to the rpc endpoint from rpcAddr. access it with a URL like:
 // http://0.0.0.0:{restGatewayPort}/v1/helloservice/sayhello?name=dolly&times=15
-func NewRestGateway(restGatewayPort int, rpcAddr *net.TCPAddr, gwAddrChan chan<- string) {
+func NewRestGateway(restGatewayPort int, rpcAddr *net.TCPAddr) restgatewayserver {
 
 	// TODO should this not take a cancelable context?
 	conn, err := grpcservice.NewNetClientConn(context.Background(), rpcAddr.String())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
-	defer conn.Close()
 
 	gwmux := runtime.NewServeMux()
 	err = greeter.RegisterGreeterHandler(context.Background(), gwmux, conn.GetClientConn())
@@ -36,11 +41,25 @@ func NewRestGateway(restGatewayPort int, rpcAddr *net.TCPAddr, gwAddrChan chan<-
 		log.Fatalf("could not create REST gateway listener: %v", err)
 	}
 
-	gwAddrChan <- listener.Addr().String()
-	log.Printf("Serving gRPC-Gateway on %s\n", listener.Addr().String())
+	return restgatewayserver{listener, gwmux, conn}
 
-	servingErr := http.Serve(listener, gwmux)
-	if servingErr != nil {
-		log.Fatalf("REST gateway had error serving: %v", err)
+}
+
+func (gw restgatewayserver) Serve() error {
+
+	log.Printf("Serving gRPC-Gateway on %s\n", gw.listener.Addr().String())
+
+	servingErr := http.Serve(gw.listener, gw.gwmux)
+	log.Fatalf("REST gateway had error serving: %v", servingErr)
+	return servingErr
+}
+
+func (gw restgatewayserver) Close() {
+	if gw.grpcClient != nil {
+		gw.grpcClient.Close()
 	}
+}
+
+func (gw restgatewayserver) GetRestGatewayAddr() net.Addr {
+	return gw.listener.Addr()
 }
