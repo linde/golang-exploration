@@ -12,10 +12,12 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 )
 
-// get to this via http://0.0.0.0:{restGatewayPort}/v1/helloservice/sayhello?name=foo&times=15
+// This is a rest gateway serving on restGatewayPort that proxies
+// to the rpc endpoint from rpcAddr. access it with a URL like:
+// http://0.0.0.0:{restGatewayPort}/v1/helloservice/sayhello?name=dolly&times=15
+func NewRestGateway(restGatewayPort int, rpcAddr *net.TCPAddr, gwAddrChan chan<- string) {
 
-func NewRestGateway(restGatewayPort int, rpcAddr *net.TCPAddr) {
-
+	// TODO should this not take a cancelable context?
 	conn, err := grpcservice.NewNetClientConn(context.Background(), rpcAddr.String())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
@@ -34,6 +36,7 @@ func NewRestGateway(restGatewayPort int, rpcAddr *net.TCPAddr) {
 		log.Fatalf("could not create REST gateway listener: %v", err)
 	}
 
+	gwAddrChan <- listener.Addr().String()
 	log.Printf("Serving gRPC-Gateway on %s\n", listener.Addr().String())
 
 	servingErr := http.Serve(listener, gwmux)

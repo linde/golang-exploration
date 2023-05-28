@@ -1,15 +1,88 @@
 package restservice
 
 import (
+	"fmt"
+	"io"
+	"myapp/greeterserver"
+	"myapp/grpcservice"
+	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	a "github.com/stretchr/testify/assert"
 )
 
-// TODO make these tests!
 func TestRestGateway(t *testing.T) {
 
-	assert := assert.New(t)
+	assert := a.New(t)
 	assert.NotNil(assert)
+
+	// set up a net listenter so we can test gatewaying requests to it
+
+	gs, err := grpcservice.NewServerFromPort(0)
+	assert.NotNil(gs)
+	assert.Nil(err)
+	serverAssignedPort, portErr := gs.GetServicePort()
+	assert.Nil(portErr)
+	assert.Greater(serverAssignedPort, 0)
+
+	helloServer := greeterserver.NewHelloServer()
+	defer helloServer.Stop()
+	go gs.Serve(helloServer)
+
+	// now get our grpc address and set up a rest gateway proxying to it.
+	//  we use a channel to receive it's address
+	gsTCPAddr, addressErr := gs.GetServiceTCPAddr()
+	assert.Nil(addressErr)
+	gwAddrChan := make(chan string)
+	go NewRestGateway(0, gsTCPAddr, gwAddrChan)
+
+	// TODO do this is via a select it's not blocking, if there were an error
+	gwAddr := <-gwAddrChan
+	assert.NotZero(len(gwAddr))
+
+	// TODO data drive a few tests/assertions
+
+	tests := []struct {
+		nameInput  string
+		timesInput int
+		pauseInput int
+		respCode   int
+	}{
+		{"dolly", 1, 0, http.StatusOK},
+		{"dolly", 2, 0, http.StatusOK},
+		{"negativeTimes", -3, 0, http.StatusBadRequest},
+		{"negativeWait", 1, -1, http.StatusBadRequest},
+	}
+
+	for idx, test := range tests {
+
+		testName := fmt.Sprintf("TestRestGateway(idx:%d){name:%s,times:%d,pause:%d}",
+			idx, test.nameInput, test.timesInput, test.pauseInput)
+
+		t.Run(testName, func(tt *testing.T) {
+
+			assert := a.New(tt)
+
+			url := fmt.Sprintf("http://%s/v1/helloservice/sayhello?name=%s&times=%d&pause=%d",
+				gwAddr, test.nameInput, test.timesInput, test.pauseInput)
+			resp, httpErr := http.Get(url)
+			assert.Nil(httpErr)
+			assert.NotNil(resp)
+			assert.Equal(test.respCode, resp.StatusCode)
+
+			defer resp.Body.Close()
+
+			if test.respCode == http.StatusOK {
+				body, err := io.ReadAll(resp.Body)
+				assert.Nil(err)
+
+				bodyStr := string(body)
+				assert.Contains(bodyStr, test.nameInput)
+				assert.Contains(bodyStr, fmt.Sprintf("%d of %d", test.timesInput, test.timesInput))
+			}
+
+		})
+
+	}
 
 }
