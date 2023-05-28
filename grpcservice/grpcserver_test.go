@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 
 	"myapp/greeter"
-	"myapp/greeterserver"
+	"myapp/helloserver"
 )
 
 func TestNetGrpcServer(t *testing.T) {
@@ -68,7 +68,7 @@ func TestBufferServing(t *testing.T) {
 	gs := NewServerListner(listener)
 	assert.NotNil(gs)
 
-	helloServer := greeterserver.NewHelloServer()
+	helloServer := helloserver.NewHelloServer()
 	defer helloServer.Stop()
 
 	go gs.Serve(helloServer)

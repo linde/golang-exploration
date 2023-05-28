@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 	"myapp/greeter"
-	"myapp/greeterserver"
 	"myapp/grpcservice"
+	"myapp/helloserver"
 	"strings"
 	"testing"
 	"time"
@@ -28,7 +28,7 @@ func TestBufferServing(t *testing.T) {
 	gs := grpcservice.NewServerListner(listener)
 	assert.NotNil(gs)
 
-	helloServer := greeterserver.NewHelloServer()
+	helloServer := helloserver.NewHelloServer()
 	defer helloServer.Stop()
 
 	go gs.Serve(helloServer)
@@ -92,7 +92,7 @@ func TestPortServing(t *testing.T) {
 	assert.Nil(portErr)
 	assert.Greater(serverAssignedPort, 0)
 
-	helloServer := greeterserver.NewHelloServer()
+	helloServer := helloserver.NewHelloServer()
 	defer helloServer.Stop()
 	go gs.Serve(helloServer)
 
@@ -168,7 +168,7 @@ func BenchmarkBufferServing(b *testing.B) {
 
 	gs, _ := grpcservice.NewServerFromPort(0)
 	serverAssignedPort, _ := gs.GetServicePort()
-	helloServer := greeterserver.NewHelloServer()
+	helloServer := helloserver.NewHelloServer()
 	defer helloServer.Stop()
 	go gs.Serve(helloServer)
 

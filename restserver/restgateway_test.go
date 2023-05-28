@@ -3,8 +3,8 @@ package restserver
 import (
 	"fmt"
 	"io"
-	"myapp/greeterserver"
 	"myapp/grpcservice"
+	"myapp/helloserver"
 	"net/http"
 	"testing"
 
@@ -25,7 +25,7 @@ func TestRestGateway(t *testing.T) {
 	assert.Nil(portErr)
 	assert.Greater(serverAssignedPort, 0)
 
-	helloServer := greeterserver.NewHelloServer()
+	helloServer := helloserver.NewHelloServer()
 	defer helloServer.Stop()
 	go gs.Serve(helloServer)
 

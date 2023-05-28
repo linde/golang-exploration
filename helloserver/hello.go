@@ -1,5 +1,4 @@
-// TODO rename this package when the server is moved to grpc
-package greeterserver
+package helloserver
 
 import (
 	"fmt"

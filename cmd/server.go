@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"log"
-	"myapp/greeterserver"
 	"myapp/grpcservice"
+	"myapp/helloserver"
 	"myapp/restserver"
 
 	"github.com/spf13/cobra"
@@ -37,7 +37,7 @@ func doServerRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatalf("failed to create server: %v", err)
 	}
-	helloServer := greeterserver.NewHelloServer()
+	helloServer := helloserver.NewHelloServer()
 	defer helloServer.Stop()
 
 	// if restPort is configured, add a rest gateway using the port
