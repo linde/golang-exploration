@@ -23,7 +23,6 @@ type restgatewayserver struct {
 // http://0.0.0.0:{restGatewayPort}/v1/helloservice/sayhello?name=dolly&times=15
 func NewRestGateway(restGatewayPort int, rpcAddr *net.TCPAddr) restgatewayserver {
 
-	// TODO should this not take a cancelable context?
 	conn, err := grpcservice.NewNetClientConn(context.Background(), rpcAddr.String())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
