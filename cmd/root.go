@@ -11,7 +11,7 @@ import (
 func NewRootCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   filepath.Base(os.Args[0]),
-		Short: "implements a CLI for either a client or server for the greeter service",
+		Short: "implements a CLI for either a client or server of the greeter service",
 	}
 }
 
@@ -27,8 +27,9 @@ func Execute() {
 	}
 }
 
+// TODO do ENV and file config support too
+
 func init() {
 
-	// TODO do ENV and file config support too
-	RootCmd.PersistentFlags().Int("port", 10001, "this is the service port")
+	RootCmd.PersistentFlags().IntP("port", "p", 10001, "grpc server port to use or connect to")
 }

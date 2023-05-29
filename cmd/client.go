@@ -38,13 +38,13 @@ func init() {
 
 func doClientRun(cmd *cobra.Command, args []string) {
 
-	port, _ := cmd.Flags().GetInt("port") // TODO should this be with the others?
+	rpcPort, _ := cmd.Flags().GetInt("port") // this references the root param --port
 
 	timeout := time.Second * time.Duration(timeoutSecs)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	target := fmt.Sprintf("%s:%d", host, port)
+	target := fmt.Sprintf("%s:%d", host, rpcPort)
 	client, err := grpcservice.NewNetClientConn(ctx, target)
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)

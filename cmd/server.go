@@ -16,7 +16,7 @@ func NewServerCmd() *cobra.Command {
 		Run:   doServerRun,
 	}
 
-	// TODO document and unit and e2e test the rest port
+	// TODO document and e2e test the rest port
 	cmd.Flags().IntVarP(&restPort, "rest", "r", -1, "port to use to also enable the rest gateway")
 	return cmd
 
@@ -31,7 +31,7 @@ func init() {
 
 func doServerRun(cmd *cobra.Command, args []string) {
 
-	rpcPort, _ := cmd.Flags().GetInt("port")
+	rpcPort, _ := cmd.Flags().GetInt("port") // this references the root param --port
 
 	gs, err := grpcservice.NewServerFromPort(rpcPort)
 	if err != nil {
