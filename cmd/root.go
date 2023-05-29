@@ -8,11 +8,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const DEFAULT_PORT = 10001
+
 func NewRootCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   filepath.Base(os.Args[0]),
 		Short: "implements a CLI for either a client or server of the greeter service",
 	}
+
+	return cmd
 }
 
 // This represents the base command when called without any subcommands
@@ -31,5 +35,4 @@ func Execute() {
 
 func init() {
 
-	RootCmd.PersistentFlags().IntP("port", "p", 10001, "grpc server port to use or connect to")
 }

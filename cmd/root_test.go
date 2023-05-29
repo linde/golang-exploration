@@ -10,14 +10,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_ExecuteCommand(t *testing.T) {
+func Test_RootCommand(t *testing.T) {
+
+	helpAssertionString := "cli"
 
 	cmd := NewRootCmd()
-	GenericCommandRunner(t, cmd, "cli")
+	GenericCommandRunner(t, cmd, helpAssertionString)
+
+	cmd.SetArgs([]string{"--help"})
+	GenericCommandRunner(t, cmd, helpAssertionString)
 
 	falseFlag := "--not-a-real-arg"
 	cmd.SetArgs([]string{falseFlag})
 	GenericCommandRunner(t, cmd, "unknown flag: "+falseFlag)
+
 }
 
 func GenericCommandRunner(t *testing.T, cmd *cobra.Command, outputAssertions ...string) string {

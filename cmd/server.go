@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"log"
+	"fmt"
 	"myapp/grpcservice"
 	"myapp/helloserver"
 	"myapp/restserver"
@@ -9,33 +9,34 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var serverCmd = NewServerCmd()
+var restPort, rpcPort int
+
 func NewServerCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "server",
 		Short: "example server for the greeter service",
-		Run:   doServerRun,
+		RunE:  doServerRun,
 	}
 
 	// TODO document and e2e test the rest port
+
+	cmd.Flags().IntVarP(&rpcPort, "port", "p", DEFAULT_PORT, "rpcserver port")
 	cmd.Flags().IntVarP(&restPort, "rest", "r", -1, "port to use to also enable the rest gateway")
+
 	return cmd
-
 }
-
-var serverCmd = NewServerCmd()
-var restPort int
 
 func init() {
 	RootCmd.AddCommand(serverCmd)
 }
 
-func doServerRun(cmd *cobra.Command, args []string) {
-
-	rpcPort, _ := cmd.Flags().GetInt("port") // this references the root param --port
+func doServerRun(cmd *cobra.Command, args []string) error {
 
 	gs, err := grpcservice.NewServerFromPort(rpcPort)
 	if err != nil {
-		log.Fatalf("failed to create server: %v", err)
+		fmt.Fprintf(cmd.ErrOrStderr(), "failed to create server: %v", err)
+		return err
 	}
 	helloServer := helloserver.NewHelloServer()
 	defer helloServer.Stop()
@@ -44,14 +45,17 @@ func doServerRun(cmd *cobra.Command, args []string) {
 	if restPort >= 0 {
 		rpcAddr, err := gs.GetServiceTCPAddr()
 		if err != nil {
-			log.Fatalf("error getting RPC service address: %s", err)
+			fmt.Fprintf(cmd.ErrOrStderr(), "error getting RPC service address: %s", err)
+			return err
 		}
 		go restserver.NewRestGateway(restPort, rpcAddr)
 	}
 
 	serveErr := gs.Serve(helloServer)
 	if serveErr != nil {
-		log.Fatalf("serverCmd.doServerRun failed to serve: %v", err)
+		fmt.Fprintf(cmd.ErrOrStderr(), "error in grpc server Serve(): %v", err)
+		return err
 	}
 
+	return nil
 }

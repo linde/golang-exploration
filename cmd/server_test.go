@@ -7,30 +7,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// make this true if you want to run the test below to debug interactively
-const RUN_BLOCKING_TEST = false
-
 func Test_ServerCommand(t *testing.T) {
+
 	assert := assert.New(t)
 
-	if RUN_BLOCKING_TEST != true {
-		return
-	}
-
-	cmd := NewServerCmd()
-	assert.NotNil(cmd)
-
-	port := 18888
+	port := 18888 // TODO find an unused port somehow
 	portArg := fmt.Sprintf("--port=%d", port)
-	cmd.SetArgs([]string{portArg})
+
 	go func() {
-		out := GenericCommandRunner(t, cmd /*** no assertions bc this wont return ***/)
-		t.Errorf("got: %s", out)
+		cmd := NewServerCmd()
+		cmd.SetArgs([]string{portArg})
+
+		GenericCommandRunner(t, cmd)
+		assert.Fail("should not reach here, server command should block")
 	}()
 
 	clientCmd := NewClientCmd()
 	clientCmd.SetArgs([]string{portArg})
 
-	GenericCommandRunner(t, clientCmd)
+	GenericCommandRunner(t, clientCmd, "Hello, World!")
 
 }
