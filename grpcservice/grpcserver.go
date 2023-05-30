@@ -55,7 +55,7 @@ func (gs grpcserver) Serve(s *grpc.Server) error {
 	log.Printf("grpcserver listening at %v", gs.lis.Addr())
 	err := s.Serve(gs.lis)
 	if err != nil {
-		log.Printf("greeterserver.ServeListener() failed to listen: %v", err)
+		log.Printf("grpcserver failed with error: %v", err)
 	}
 	return err
 }
