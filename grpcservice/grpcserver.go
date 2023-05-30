@@ -52,8 +52,10 @@ func (gs grpcserver) GetServiceTCPAddr() (*net.TCPAddr, error) {
 
 func (gs grpcserver) Serve(s *grpc.Server) error {
 
-	log.Printf("server listening at %v", gs.lis.Addr())
+	log.Printf("grpcserver listening at %v", gs.lis.Addr())
 	err := s.Serve(gs.lis)
-	log.Printf("greeterserver.ServeListener() failed to listen: %v", err)
+	if err != nil {
+		log.Printf("greeterserver.ServeListener() failed to listen: %v", err)
+	}
 	return err
 }
