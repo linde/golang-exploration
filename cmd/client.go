@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var clientCmd = NewClientCmd()
@@ -28,8 +30,9 @@ func NewClientCmd() *cobra.Command {
 	cmd.Flags().IntVarP(&rpcPort, "port", "p", DEFAULT_PORT, "rpcserver port")
 	cmd.Flags().StringVarP(&name, "name", "n", "world", "whom to greet")
 	cmd.Flags().Int64VarP(&times, "times", "t", 1, "times to greet them")
+	// TODO rename the proto for sleep to match this param
 	cmd.Flags().Int64VarP(&pause, "wait", "w", 0, "seconds to wait before serving")
-	cmd.Flags().IntVarP(&timeoutSecs, "timeout", "x", 60, "timeout (in seconds)")
+	cmd.Flags().IntVarP(&timeoutSecs, "timeout", "x", 0, "timeout (in seconds)")
 
 	return cmd
 }
@@ -40,9 +43,13 @@ func init() {
 
 func doClientRun(cmd *cobra.Command, args []string) error {
 
-	timeout := time.Second * time.Duration(timeoutSecs)
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
+	var ctx = context.Background()
+	if timeoutSecs > 0 {
+		timeout := time.Second * time.Duration(timeoutSecs)
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+	}
 
 	target := fmt.Sprintf("%s:%d", host, rpcPort)
 	client, err := grpcservice.NewNetClientConn(ctx, target)
@@ -61,6 +68,14 @@ func doClientRun(cmd *cobra.Command, args []string) error {
 
 	replies, err := grpcservice.ReplyStreamToBuffer(replyStream)
 	if err != nil {
+
+		// first check if we had a timeoout and exceeded it and report appropriately
+		st := status.Convert(err)
+		if timeoutSecs > 0 && st.Code() == codes.DeadlineExceeded {
+			fmt.Fprintf(cmd.ErrOrStderr(), "Response exceeded deadline of %d seconds\n", timeoutSecs)
+			return nil
+		}
+
 		fmt.Fprintf(cmd.ErrOrStderr(), "could not unbuffer the stream: %v", err)
 		return err
 	}

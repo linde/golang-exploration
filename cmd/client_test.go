@@ -41,7 +41,10 @@ func Test_ClientCommand(t *testing.T) {
 	// test the timeout and the wait params
 
 	waitCommandClient := NewClientCmd()
-	waitCommandClient.SetArgs([]string{portStr, "--wait=10", "--timeout=1"})
-	GenericCommandRunner(t, waitCommandClient, "DeadlineExceeded")
+	timeoutSeconds := 1
+	timeoutArg := fmt.Sprintf("--timeout=%d", timeoutSeconds)
+	waitCommandClient.SetArgs([]string{portStr, "--wait=10", timeoutArg})
+	deadlineErrorMsg := fmt.Sprintf("response exceeded deadline of %d seconds", timeoutSeconds)
+	GenericCommandRunner(t, waitCommandClient, deadlineErrorMsg)
 
 }
