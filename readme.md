@@ -68,7 +68,10 @@ curl "http://localhost:${REST_GW_PORT}/v1/helloservice/sayhello?name=dolly&times
 ```bash
 
 # remove the protoc generated go files
+
 find greeter -name *.pb.go  | xargs rm
+find greeter -name *.pb.gw.go  | xargs rm
+
 ```
 
 Collected Tasks
@@ -77,7 +80,7 @@ Collected Tasks
 * TODO: clean up output and logger use and use [logging constants](https://pkg.go.dev/log#pkg-constants)
 * TODO: think about moving proto to a `proto/` dir
 * TODO: generate the openapi v2 schema for the rest gw via this [example](https://github.com/grpc-ecosystem/grpc-gateway/blob/main/examples/internal/proto/examplepb/a_bit_of_everything.proto#L219)
-
+* TODO: consider using docker images for the protobuf binaries, etc, to forgo installing
 
 
 
