@@ -6,16 +6,20 @@ this is a set of explorations of golang, grpc, protobuf, unit/e2e testing in gol
 to build, you need to first install some things:
 
 ```bash
-go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
-go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
+go install \
+    github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway \
+    github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2 \
+    google.golang.org/protobuf/cmd/protoc-gen-go \
+    google.golang.org/grpc/cmd/protoc-gen-go-grpc
+
+go mod tidy
 ```
 
 next, obtain the protobuf comiler, [protoc](https://grpc.io/docs/protoc-installation/), and use `go generate` to compile the service protobuf and then run tests.
 
 ```bash
-$ go generate ./... 
-$ go test -v ./... 
+go generate ./... 
+go test -v ./... 
 ```
 
 # Tring it out

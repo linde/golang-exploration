@@ -9,7 +9,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 )
 
 type restgatewayserver struct {
@@ -29,6 +29,7 @@ func NewRestGateway(restGatewayPort int, rpcAddr *net.TCPAddr) restgatewayserver
 	}
 
 	gwmux := runtime.NewServeMux()
+
 	err = greeter.RegisterGreeterHandler(context.Background(), gwmux, conn.GetClientConn())
 	if err != nil {
 		log.Fatalln("Failed to register gateway:", err)
