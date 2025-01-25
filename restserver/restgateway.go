@@ -47,6 +47,7 @@ func NewRestGateway(restGatewayPort int, rpcAddr *net.TCPAddr) restgatewayserver
 
 func (gw restgatewayserver) Serve() error {
 
+	defer gw.Close()
 	log.Printf("Serving gRPC-Gateway on %s\n", gw.listener.Addr().String())
 
 	servingErr := http.Serve(gw.listener, gw.gwmux)

@@ -48,7 +48,9 @@ func doServerRun(cmd *cobra.Command, args []string) error {
 			fmt.Fprintf(cmd.ErrOrStderr(), "error getting RPC service address: %s", err)
 			return err
 		}
-		go restserver.NewRestGateway(restPort, rpcAddr)
+		rgw := restserver.NewRestGateway(restPort, rpcAddr)
+		go rgw.Serve()
+
 	}
 
 	serveErr := gs.Serve(helloServer)
