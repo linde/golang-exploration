@@ -40,7 +40,7 @@ func TestRestGateway(t *testing.T) {
 	gwAddr := rgw.GetRestGatewayAddr()
 	go rgw.Serve()
 
-	// ok, we're set up to test the restgawy
+	// ok, we're set up to test the rest gateway
 
 	tests := []struct {
 		nameInput  string
