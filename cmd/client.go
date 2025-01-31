@@ -18,6 +18,8 @@ var name, host string
 var times, pause int64
 var timeoutSecs int
 
+var clientRequestedRpcPort int
+
 func NewClientCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
@@ -27,7 +29,7 @@ func NewClientCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&host, "host", "s", "localhost", "server host")
-	cmd.Flags().IntVarP(&rpcPort, "port", "p", DEFAULT_PORT, "rpcserver port")
+	cmd.Flags().IntVarP(&clientRequestedRpcPort, "port", "p", DEFAULT_PORT, "rpcserver port")
 	cmd.Flags().StringVarP(&name, "name", "n", "world", "whom to greet")
 	cmd.Flags().Int64VarP(&times, "times", "t", 1, "times to greet them")
 	// TODO rename the proto for sleep to match this param
@@ -51,7 +53,7 @@ func doClientRun(cmd *cobra.Command, args []string) error {
 		defer cancel()
 	}
 
-	target := fmt.Sprintf("%s:%d", host, rpcPort)
+	target := fmt.Sprintf("%s:%d", host, clientRequestedRpcPort)
 	client, err := grpcservice.NewNetClientConn(ctx, target)
 	if err != nil {
 		fmt.Fprintf(cmd.ErrOrStderr(), "did not connect: %v", err)
