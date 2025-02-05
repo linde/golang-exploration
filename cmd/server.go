@@ -16,9 +16,10 @@ import (
 // a rest gateway for it.
 
 type ServerCommand struct {
-	requestedRpcPort, servingRpcPort int // TODO make like rest fields
-	rpcReady                         bool
-	rpcStopFunc                      func()
+	rpcRequestedPort int
+	rpcServingPort   int
+	rpcReady         bool
+	rpcStopFunc      func()
 
 	restRequestedPort int
 	restServingAddr   net.Addr // TODO should this have an accessor with a timeout?
@@ -44,7 +45,7 @@ func NewServerCommand() *ServerCommand {
 		},
 	}
 
-	sc.Cmd.Flags().IntVarP(&sc.requestedRpcPort, "port", "p", DEFAULT_PORT, "rpcserver port")
+	sc.Cmd.Flags().IntVarP(&sc.rpcRequestedPort, "port", "p", DEFAULT_PORT, "rpcserver port")
 	sc.Cmd.Flags().IntVarP(&sc.restRequestedPort, "rest", "r", -1, "port to use to also enable the rest gateway")
 
 	return sc
@@ -58,7 +59,7 @@ func init() {
 func (sc *ServerCommand) doServerCmd() error {
 
 	// start by creating the grpcservice
-	grpcsvc, err := grpcservice.NewServerFromPort(sc.requestedRpcPort)
+	grpcsvc, err := grpcservice.NewServerFromPort(sc.rpcRequestedPort)
 	if err != nil {
 		return fmt.Errorf("failed to create server: %w", err)
 	}
@@ -71,7 +72,7 @@ func (sc *ServerCommand) doServerCmd() error {
 	if err != nil {
 		return fmt.Errorf("error determining the serving address: %w", err)
 	}
-	sc.servingRpcPort = rpcAddr.Port
+	sc.rpcServingPort = rpcAddr.Port
 	sc.rpcStopFunc = helloServer.Stop
 	sc.rpcReady = true
 

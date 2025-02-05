@@ -22,7 +22,7 @@ func Test_ClientCommand(t *testing.T) {
 	rpcReady := serverCmd.WaitForRpcReady(10, 2*time.Second)
 	assert.True(rpcReady, "timed out waiting for gRPC service")
 
-	rpcPort := serverCmd.servingRpcPort
+	rpcPort := serverCmd.rpcServingPort
 	assert.Greater(rpcPort, 0)
 	clientPortArg := fmt.Sprintf("--port=%d", rpcPort)
 
