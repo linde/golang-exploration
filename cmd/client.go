@@ -18,6 +18,7 @@ var name, host string
 var times, pause int64
 var timeoutSecs int
 
+// TODO we need validation for this param and others like it
 var clientRequestedRpcPort int
 
 func NewClientCmd() *cobra.Command {

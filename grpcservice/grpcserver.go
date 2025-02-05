@@ -3,7 +3,7 @@ package grpcservice
 import (
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"net"
 
 	"google.golang.org/grpc"
@@ -17,8 +17,7 @@ func NewServerFromPort(port int) (*grpcserver, error) {
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		log.Printf("grpcserver.NewServerFromPort() failed to listen: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("grpcserver.NewServerFromPort() unable to listen: %w", err)
 	}
 	return &grpcserver{lis: lis}, err
 }
@@ -52,10 +51,7 @@ func (gs grpcserver) GetServiceTCPAddr() (*net.TCPAddr, error) {
 
 func (gs grpcserver) Serve(s *grpc.Server) error {
 
-	log.Printf("grpcserver listening at %v", gs.lis.Addr())
+	slog.Info("grpcserver listening", "address", gs.lis.Addr())
 	err := s.Serve(gs.lis)
-	if err != nil {
-		log.Printf("grpcserver failed with error: %v", err)
-	}
 	return err
 }

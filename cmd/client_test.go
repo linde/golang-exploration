@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -11,16 +12,19 @@ func Test_ClientCommand(t *testing.T) {
 
 	assert := assert.New(t)
 
-	serverCmd := NewServerCmd()
-	defer ServerCommandClose()
-	serverCmd.SetArgs([]string{"--port=0"}) // port 0 finds an unused port
-	go GenericCommandRunner(t, serverCmd)
-	defer ServerCommandClose()
+	serverCmd := NewServerCommand()
+	defer serverCmd.Close()
+	serverCmd.Cmd.SetArgs([]string{"--port=0"}) // use zero to grab an open port
+	go func() {
+		GenericCommandRunner(t, serverCmd.Cmd)
+	}()
 
-	clientPort, clientPortErr := getRpcServingPort(10)
-	assert.Nil(clientPortErr)
-	assert.Greater(clientPort, 0)
-	clientPortArg := fmt.Sprintf("--port=%d", clientPort)
+	rpcReady := serverCmd.WaitForRpcReady(10, 2*time.Second)
+	assert.True(rpcReady, "timed out waiting for gRPC service")
+
+	rpcPort := serverCmd.servingRpcPort
+	assert.Greater(rpcPort, 0)
+	clientPortArg := fmt.Sprintf("--port=%d", rpcPort)
 
 	// test the port parameter
 	portClientCmd := NewClientCmd()
@@ -47,7 +51,7 @@ func Test_ClientCommand(t *testing.T) {
 	validationStr := fmt.Sprintf("%d of %d", times, times)
 	GenericCommandRunner(t, timesCommandClient, validationStr)
 
-	// test the timeout and the wait params
+	// // test the timeout and the wait params
 
 	waitCommandClient := NewClientCmd()
 	timeoutSeconds := 1

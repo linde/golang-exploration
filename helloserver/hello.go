@@ -2,7 +2,7 @@ package helloserver
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	pb "myapp/greeter"
 	"time"
 
@@ -28,7 +28,7 @@ func NewHelloServer() *grpc.Server {
 func (s *server) SayHello(in *pb.HelloRequest, stream pb.Greeter_SayHelloServer) error {
 
 	name, times, pause := in.GetName(), in.GetTimes(), in.GetPause()
-	log.Printf("SayHello: %v, %d times, after %d seconds pause", name, times, pause)
+	slog.Info("SayHello", "name", name, "times", times, "pause", pause)
 
 	if pause < 0 {
 		st := status.Newf(codes.InvalidArgument, "got negative rest duration (%v)", pause)

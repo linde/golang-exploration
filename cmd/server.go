@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"myapp/grpcservice"
 	"myapp/helloserver"
@@ -12,120 +11,118 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var serverCmd = NewServerCmd()
-var serverCmdInfo *ServerCmdInfo
-var requestedRestPort, requestedRpcPort int
+// This struct helps us make state available from our normally blocking
+// --server command which launche both a grpc server and also optionally
+// a rest gateway for it.
 
-// TODO should really make a new struct to bring the info and cmd together
-// TODO should probably reason with Addr's not ports maybe
-type ServerCmdInfo struct {
-	rpcServingPort int
-	rpcStopFunc    func()
+type ServerCommand struct {
+	requestedRpcPort, servingRpcPort int // TODO make like rest fields
+	rpcReady                         bool
+	rpcStopFunc                      func()
 
-	restInitialized bool
-	restServingAddr net.Addr
-	restStopFunc    func()
+	restRequestedPort int
+	restServingAddr   net.Addr // TODO should this have an accessor with a timeout?
+	restReady         bool
+	restStopFunc      func()
+
+	Cmd *cobra.Command
 }
 
-func ServerCommandClose() {
-	if serverCmdInfo == nil {
-		return
-	}
+var serverCmd = NewServerCommand()
 
-	serverCmdInfo.rpcStopFunc()
-	if serverCmdInfo.restInitialized {
-		serverCmdInfo.restStopFunc()
-	}
-	serverCmdInfo = nil
-}
+func NewServerCommand() *ServerCommand {
 
-func NewServerCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	sc := &ServerCommand{}
+
+	sc.Cmd = &cobra.Command{
 		Use:   "server",
 		Short: "example server for the greeter service",
-		RunE:  doServerRun,
+
+		// here we inline a RunE function that makes our ServerCommand avail
+		RunE: func(*cobra.Command, []string) error {
+			return sc.doServerCmd()
+		},
 	}
 
-	// TODO document and e2e test the rest port
+	sc.Cmd.Flags().IntVarP(&sc.requestedRpcPort, "port", "p", DEFAULT_PORT, "rpcserver port")
+	sc.Cmd.Flags().IntVarP(&sc.restRequestedPort, "rest", "r", -1, "port to use to also enable the rest gateway")
 
-	cmd.Flags().IntVarP(&requestedRpcPort, "port", "p", DEFAULT_PORT, "rpcserver port")
-	cmd.Flags().IntVarP(&requestedRestPort, "rest", "r", -1, "port to use to also enable the rest gateway")
-
-	return cmd
+	return sc
 }
 
 func init() {
-	RootCmd.AddCommand(serverCmd)
+	RootCmd.AddCommand(serverCmd.Cmd)
 }
 
-func doServerRun(cmd *cobra.Command, args []string) error {
+// TODO is this better as a receiver or as a param for a pointer to the struct?
+func (sc *ServerCommand) doServerCmd() error {
 
-	gs, err := grpcservice.NewServerFromPort(requestedRpcPort)
+	// start by creating the grpcservice
+	grpcsvc, err := grpcservice.NewServerFromPort(sc.requestedRpcPort)
 	if err != nil {
-		fmt.Fprintf(cmd.ErrOrStderr(), "failed to create server: %v", err)
-		return err
+		return fmt.Errorf("failed to create server: %w", err)
 	}
 	helloServer := helloserver.NewHelloServer()
 	defer helloServer.Stop()
 
-	if rpcServingPort, err := gs.GetServicePort(); err == nil {
-		serverCmdInfo = &ServerCmdInfo{
-			rpcServingPort:  rpcServingPort,
-			rpcStopFunc:     helloServer.Stop,
-			restInitialized: false,
-		}
+	// collect the serving port used. it might be different
+	// if 0 were passed in. also grab the close func
+	rpcAddr, err := grpcsvc.GetServiceTCPAddr()
+	if err != nil {
+		return fmt.Errorf("error determining the serving address: %w", err)
 	}
+	sc.servingRpcPort = rpcAddr.Port
+	sc.rpcStopFunc = helloServer.Stop
+	sc.rpcReady = true
 
-	// if restPort is configured, add a rest gateway using the port
-	if requestedRestPort >= 0 {
-		rpcAddr, err := gs.GetServiceTCPAddr()
-		if err != nil {
-			fmt.Fprintf(cmd.ErrOrStderr(), "error getting RPC service address: %s", err)
-			return err
-		}
-		rgw := restserver.NewRestGateway(requestedRestPort, rpcAddr)
+	// if restPort is configured, add a rest gateway to our new rpcAddr
+	if sc.restRequestedPort >= 0 {
+		rgw := restserver.NewRestGateway(sc.restRequestedPort, rpcAddr)
 		go rgw.Serve()
 
-		serverCmdInfo.restServingAddr = rgw.GetRestGatewayAddr()
-		serverCmdInfo.restStopFunc = rgw.Close
-		serverCmdInfo.restInitialized = true
+		sc.restServingAddr = rgw.GetRestGatewayAddr()
+		sc.restStopFunc = rgw.Close
+		sc.restReady = true
 	}
 
-	serveErr := gs.Serve(helloServer)
+	// ok, let's go - this will block until closed
+	serveErr := grpcsvc.Serve(helloServer)
 	if serveErr != nil {
-		fmt.Fprintf(cmd.ErrOrStderr(), "error in grpc server Serve(): %v", err)
-		return err
+		return fmt.Errorf("error in grpc server Serve(): %w", err)
 	}
-
 	return nil
 }
 
-func getRpcServingPort(maxAttempts int) (int, error) {
-	serverCmdInfo, err := getServerCmdInfo(maxAttempts)
-	if err != nil {
-		return -1, err
+func (sc *ServerCommand) GetRunE() (runE func(*cobra.Command, []string) error) {
+
+	return func(*cobra.Command, []string) error {
+		return sc.doServerCmd()
 	}
-	return serverCmdInfo.rpcServingPort, nil
 }
 
-func getRestServingAddr(maxAttempts int) (net.Addr, error) {
-	serverCmdInfo, err := getServerCmdInfo(maxAttempts)
-	if err != nil {
-		return nil, err
+func (sc *ServerCommand) waitForReady(flag *bool, retries int, retryWait time.Duration) bool {
+
+	for attempts := 0; !*flag && attempts < retries; attempts++ {
+		time.Sleep(retryWait)
 	}
-	return serverCmdInfo.restServingAddr, nil
+	return *flag
+
 }
 
-func getServerCmdInfo(maxAttempts int) (*ServerCmdInfo, error) {
+func (sc *ServerCommand) WaitForRpcReady(retries int, retryWait time.Duration) bool {
+	return sc.waitForReady(&sc.rpcReady, retries, retryWait)
+}
 
-	for attempts := 1; serverCmdInfo == nil && attempts < maxAttempts; attempts++ {
-		time.Sleep(3 * time.Second)
+func (sc *ServerCommand) WaitForRestReady(retries int, retryWait time.Duration) bool {
+	return sc.waitForReady(&sc.restReady, retries, retryWait)
+}
+
+func (sc *ServerCommand) Close() {
+
+	if sc.restStopFunc != nil {
+		sc.restStopFunc()
 	}
-
-	if serverCmdInfo == nil {
-		errMsg := fmt.Sprintf("error not initialized after %d attempts", maxAttempts)
-		return nil, errors.New(errMsg)
+	if sc.rpcStopFunc != nil { // TODO this shouldnt need a guard, right?
+		sc.rpcStopFunc()
 	}
-	return serverCmdInfo, nil
-
 }

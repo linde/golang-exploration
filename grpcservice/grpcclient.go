@@ -2,8 +2,9 @@ package grpcservice
 
 import (
 	"context"
+	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net"
 
 	"myapp/greeter"
@@ -38,12 +39,11 @@ func NewBufferedClientConn(ctx context.Context, listener *bufconn.Listener) (net
 
 func NewNetClientConn(ctx context.Context, target string) (netcc *Clientconn, returnErr error) {
 
-	log.Printf("NewNetClientConn() client to: %s", target)
+	slog.Info("NewNetClientConn() client", "target", target)
 
 	conn, err := grpc.Dial(target, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("NewNetClientConn() error: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("error in NewNetClientConn(): %w", err)
 	}
 
 	netcc = &Clientconn{conn: conn, ctx: ctx}
@@ -56,7 +56,7 @@ func (gc *Clientconn) Call(req *greeter.HelloRequest) (greeter.Greeter_SayHelloC
 	stream, err := ngc.SayHello(gc.ctx, req)
 	if err != nil {
 		st := status.Convert(err)
-		log.Printf("greeterclient.Call had error, status: %v", st)
+		slog.Error("greeterclient.Call had error", "status", st)
 		stream = nil
 	}
 

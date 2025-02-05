@@ -5,6 +5,7 @@ import (
 	"myapp/testutils"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -13,23 +14,22 @@ func Test_ServerCommandRPC(t *testing.T) {
 
 	assert := assert.New(t)
 
-	serverCmd := NewServerCmd()
-	port := 0 // use zero to grab an open port
-	portArg := fmt.Sprintf("--port=%d", port)
-	serverCmd.SetArgs([]string{portArg})
-	defer ServerCommandClose()
-
+	serverCmd := NewServerCommand()
+	defer serverCmd.Close()
+	serverCmd.Cmd.SetArgs([]string{"--port=0"}) // use zero to grab an open port
 	go func() {
-		GenericCommandRunner(t, serverCmd)
+		GenericCommandRunner(t, serverCmd.Cmd)
 	}()
 
-	clientPort, clientPortErr := getRpcServingPort(10)
-	assert.Nil(clientPortErr)
-	assert.Greater(clientPort, 0)
-	clientPortArg := fmt.Sprintf("--port=%d", clientPort)
+	rpcReady := serverCmd.WaitForRpcReady(10, 2*time.Second)
+	assert.True(rpcReady, "timed out waiting for gRPC service")
+
+	rpcPort := serverCmd.servingRpcPort
+	assert.Greater(rpcPort, 0)
+	rpcPortArg := fmt.Sprintf("--port=%d", rpcPort)
 
 	clientCmd := NewClientCmd()
-	clientCmd.SetArgs([]string{clientPortArg})
+	clientCmd.SetArgs([]string{rpcPortArg})
 
 	GenericCommandRunner(t, clientCmd, "Hello, World!")
 
@@ -39,16 +39,21 @@ func Test_ServerCommandRestGateway(t *testing.T) {
 
 	assert := assert.New(t)
 
-	// 0 will find any open port so we use it for both
-	portArg := fmt.Sprintf("--port=%d", 0)
-	restPortArg := fmt.Sprintf("--rest=%d", 0)
-	cmd := NewServerCmd()
-	cmd.SetArgs([]string{portArg, restPortArg})
+	serverCmd := NewServerCommand()
+	defer serverCmd.Close()
 
-	go GenericCommandRunner(t, cmd)
+	// in both cases, use zero to grab open ports
+	serverCmd.Cmd.SetArgs([]string{"--port=0", "--rest=0"})
 
-	restAddr, clientAddrErr := getRestServingAddr(10)
-	assert.Nil(clientAddrErr)
+	go func() {
+		GenericCommandRunner(t, serverCmd.Cmd)
+	}()
+
+	restReady := serverCmd.WaitForRestReady(10, 2*time.Second)
+	assert.True(restReady, "Took too long for the rest gateway to become available")
+
+	restAddr := serverCmd.restServingAddr
+	assert.NotNil(restAddr)
 
 	nameInput := "Cornelius"
 	url := fmt.Sprintf("http://%s/v1/helloservice/sayhello?name=%s&times=1", restAddr.String(), nameInput)

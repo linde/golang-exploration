@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"myapp/greeter"
 	"myapp/grpcservice"
 	"net"
@@ -48,10 +49,11 @@ func NewRestGateway(restGatewayPort int, rpcAddr *net.TCPAddr) restgatewayserver
 func (gw restgatewayserver) Serve() error {
 
 	defer gw.Close()
-	log.Printf("Serving gRPC-Gateway on %s\n", gw.listener.Addr().String())
+	slog.Info("Serving gRPC-Gateway", "address", gw.listener.Addr().String())
 
 	servingErr := http.Serve(gw.listener, gw.gwmux)
 	log.Fatalf("REST gateway had error serving: %v", servingErr)
+
 	return servingErr
 }
 
