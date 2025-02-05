@@ -31,7 +31,7 @@ type ServerCommand struct {
 
 var serverCmd = NewServerCommand()
 
-func NewServerCommand() *ServerCommand {
+func NewServerCommand(args ...string) *ServerCommand {
 
 	sc := &ServerCommand{}
 
@@ -44,6 +44,7 @@ func NewServerCommand() *ServerCommand {
 			return sc.doServerCmd()
 		},
 	}
+	sc.Cmd.SetArgs(args)
 
 	sc.Cmd.Flags().IntVarP(&sc.rpcRequestedPort, "port", "p", DEFAULT_PORT, "rpcserver port")
 	sc.Cmd.Flags().IntVarP(&sc.restRequestedPort, "rest", "r", -1, "port to use to also enable the rest gateway")

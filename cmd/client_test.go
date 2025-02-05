@@ -12,12 +12,9 @@ func Test_ClientCommand(t *testing.T) {
 
 	assert := assert.New(t)
 
-	serverCmd := NewServerCommand()
+	serverCmd := NewServerCommand("--port=0") // use zero to grab an open port
 	defer serverCmd.Close()
-	serverCmd.Cmd.SetArgs([]string{"--port=0"}) // use zero to grab an open port
-	go func() {
-		GenericCommandRunner(t, serverCmd.Cmd)
-	}()
+	go GenericCommandRunner(t, serverCmd.Cmd)
 
 	rpcReady := serverCmd.WaitForRpcReady(10, 2*time.Second)
 	assert.True(rpcReady, "timed out waiting for gRPC service")
