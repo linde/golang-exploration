@@ -26,7 +26,7 @@ type ServerCommand struct {
 	restReady         bool
 	restStopFunc      func()
 
-	Cmd *cobra.Command
+	cmd *cobra.Command
 }
 
 var serverCmd = NewServerCommand()
@@ -35,7 +35,7 @@ func NewServerCommand(args ...string) *ServerCommand {
 
 	sc := &ServerCommand{}
 
-	sc.Cmd = &cobra.Command{
+	sc.cmd = &cobra.Command{
 		Use:   "server",
 		Short: "example server for the greeter service",
 
@@ -44,16 +44,20 @@ func NewServerCommand(args ...string) *ServerCommand {
 			return sc.doServerCmd()
 		},
 	}
-	sc.Cmd.SetArgs(args)
+	sc.cmd.SetArgs(args)
 
-	sc.Cmd.Flags().IntVarP(&sc.rpcRequestedPort, "port", "p", DEFAULT_PORT, "rpcserver port")
-	sc.Cmd.Flags().IntVarP(&sc.restRequestedPort, "rest", "r", -1, "port to use to also enable the rest gateway")
+	sc.cmd.Flags().IntVarP(&sc.rpcRequestedPort, "port", "p", DEFAULT_PORT, "rpcserver port")
+	sc.cmd.Flags().IntVarP(&sc.restRequestedPort, "rest", "r", -1, "port to use to also enable the rest gateway")
 
 	return sc
 }
 
 func init() {
-	RootCmd.AddCommand(serverCmd.Cmd)
+	RootCmd.AddCommand(serverCmd.cmd)
+}
+
+func (sc *ServerCommand) GetCmd() *cobra.Command {
+	return sc.cmd
 }
 
 // TODO is this better as a receiver or as a param for a pointer to the struct?

@@ -16,7 +16,7 @@ func Test_ServerCommandRPC(t *testing.T) {
 
 	serverCmd := NewServerCommand("--port=0") // use zero to grab an open port
 	defer serverCmd.Close()
-	go GenericCommandRunner(t, serverCmd.Cmd)
+	go GenericCommandRunner(t, serverCmd.GetCmd())
 
 	rpcReady := serverCmd.WaitForRpcReady(10, 2*time.Second)
 	assert.True(rpcReady, "timed out waiting for gRPC service")
@@ -38,7 +38,7 @@ func Test_ServerCommandRestGateway(t *testing.T) {
 
 	serverCmd := NewServerCommand("--port=0", "--rest=0") //use zero to grab open ports
 	defer serverCmd.Close()
-	go GenericCommandRunner(t, serverCmd.Cmd)
+	go GenericCommandRunner(t, serverCmd.GetCmd())
 
 	restReady := serverCmd.WaitForRestReady(10, 2*time.Second)
 	assert.True(restReady, "Took too long for the rest gateway to become available")
